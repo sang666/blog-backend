@@ -1,0 +1,10 @@
+server:
+  port: 8003
+
+
+spring:
+  profiles:
+    active: dev
+
+
+
