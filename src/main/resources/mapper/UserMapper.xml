@@ -9,4 +9,5 @@
     <select id="selectByUserName" resultType="com.sang.blog.biz.entity.User" parameterType="string">
         select *from  tb_user where user_name=#{userName}
     </select>
+
 </mapper>

@@ -53,7 +53,7 @@ public class Result {
         Result result = new Result();
         result.setSuccess(false);
         result.setCode(ResultCode.PERMISSION_FORBID);
-        result.setMessage("账号未登录");
+        result.setMessage("权限不足");
         return result;
     }
 

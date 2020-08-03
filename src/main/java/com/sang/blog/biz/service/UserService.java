@@ -37,4 +37,8 @@ public interface UserService extends IService<User> {
     Result checkEmail(String email);
 
     Result checkUserName(String userName);
+
+    Result deleteById(HttpServletRequest request, HttpServletResponse response, String id);
+
+    Result listUserInfo(HttpServletRequest request, HttpServletResponse response, long current, long limit);
 }

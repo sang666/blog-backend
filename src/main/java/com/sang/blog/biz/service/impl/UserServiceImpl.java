@@ -1,6 +1,7 @@
 package com.sang.blog.biz.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.gson.Gson;
 import com.sang.blog.biz.entity.RefreshToken;
 import com.sang.blog.biz.entity.Settings;
@@ -30,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -63,8 +65,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private RedisUtils redisUtils;
     @Autowired
     private TaskService taskService;
-    @Autowired
-    private UserService userService;
     @Resource
     private RefreshTokenMapper refreshTokenMapper;
     @Autowired
@@ -275,6 +275,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         redisUtils.set(Constants.user.KEY_EMAIL_SEND_ADDRESS + emailAddress, "true", 30);
         //保存code,10分钟内有效
         redisUtils.set(Constants.user.KEY_EMAIL_CODE_CONTENT + emailAddress, String.valueOf(code), 60 * 10);
+        log.info(Constants.user.KEY_EMAIL_CODE_CONTENT + emailAddress);
         return Result.ok().message("验证码发送成功");
     }
 
@@ -316,7 +317,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //第四步，检查邮箱验证码是否正确
         String emailVerifyCode = (String) redisUtils.get(Constants.user.KEY_EMAIL_CODE_CONTENT + email);
         if (StringUtils.isEmpty(emailVerifyCode)) {
-            return Result.err().message("验证码已过期");
+            log.info(user.getEmail());
+            log.info("emailKey----->"+Constants.user.KEY_EMAIL_CODE_CONTENT + email);
+            log.info("邮箱验证码-----》"+emailVerifyCode);
+            return Result.err().message("邮箱验证码已过期");
         }
         if (!emailVerifyCode.equals(emailCode)) {
             return Result.err().message("邮箱验证码不正确");
@@ -544,6 +548,68 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         User selectByUserName = userMapper.selectByUserName(userName);
         return selectByUserName==null?Result.ok().message("该用户名未注册") : Result.err().message("改用户已经被注册");
+    }
+
+    /**
+     * 删除角色
+     * 并不是真的删除而是修改状态
+     * @param request
+     * @param response
+     * @param id
+     * @return
+     */
+    @Override
+    public Result deleteById(HttpServletRequest request, HttpServletResponse response, String id) {
+        //检查当前用户
+        User checkUser = checkUser(request, response);
+        if (checkUser == null) {
+            return Result.accountNotLogin();
+        }
+        //判断角色
+        if (!Constants.user.ROLE_ADMIN.equals(checkUser.getRoles())){
+            return Result.PERMISSION_FORBID();
+        }
+        //可以操作了
+        int deleteById = userMapper.deleteById(id);
+        if (deleteById>0) {
+            return Result.ok().message("删除成功");
+
+        }Result.err().message("删除失败,用户不存在");
+
+        return null;
+
+
+    }
+
+    /**
+     * 需要管理员权限
+     * @param request
+     * @param response
+     * @param current  当前页
+     * @param limit 每页记录数
+     * @return
+     */
+    @Override
+    public Result listUserInfo(HttpServletRequest request, HttpServletResponse response, long current, long limit) {
+
+        //检查当前用户
+        User checkUser = checkUser(request, response);
+        if (checkUser == null) {
+            return Result.accountNotLogin();
+        }
+        //判断角色
+        if (!Constants.user.ROLE_ADMIN.equals(checkUser.getRoles())){
+            return Result.PERMISSION_FORBID();
+        }
+        //可以获取用户列表
+        //创建page对象
+        Page<User> page = new Page<>(current,limit);
+
+        userMapper.selectPage(page,null);
+        long total = page.getTotal();//总记录数
+        List<User> records = page.getRecords();
+
+        return Result.ok().data("total",total).data("rows",records);
     }
 
 

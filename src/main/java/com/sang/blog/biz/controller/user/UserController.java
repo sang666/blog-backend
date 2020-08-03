@@ -51,18 +51,27 @@ public class UserController {
      * @return
      */
     @GetMapping("/{current}/{limit}")
-    public Result listUserInfo(@PathVariable long current, @PathVariable long limit) {
-        return Result.ok();
+    public Result listUserInfo(HttpServletRequest request,
+                               HttpServletResponse response,
+                               @PathVariable long current,
+                               @PathVariable long limit) {
+        return userService.listUserInfo(request,response,current,limit);
     }
 
 
     /**
+     *需要管理员权限
+     *
      * @param id
      * @return
      */
-    @DeleteMapping("/{id}")
-    public Result deleteUserInfo(@PathVariable String id) {
-        return Result.ok();
+    @DeleteMapping("/{userId}")
+    public Result deleteUserInfo(HttpServletRequest request,
+                                 HttpServletResponse response,
+                                 @PathVariable("userId") String id) {
+        //判断当前的用户是谁，更据用户角色是否可以删除
+        //TODO：通过注解的方式来控制权限
+        return userService.deleteById(request,response,id);
 
 
     }
