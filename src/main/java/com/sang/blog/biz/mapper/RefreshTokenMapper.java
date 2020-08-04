@@ -13,4 +13,5 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface RefreshTokenMapper extends BaseMapper<RefreshToken> {
 
+    int deleteByTokenKey(String tokenKey);
 }

@@ -20,4 +20,7 @@ public interface UserMapper extends BaseMapper<User> {
     User selectByUserName(String userName);
 
 
+    int updatePasswordByEmail(String encode, String email);
+
+    int updateEmailById(String email, String id);
 }

@@ -133,6 +133,32 @@ public class UserController {
     }
 
 
+    /**
+     * 1.必须已经登录了
+     * 2。新的邮箱已经注册了
+     *
+     * 用户的步骤：
+     * 1.已经登陆
+     * 2.输入新的邮箱地址
+     * 3.获取验证码
+     * 4.输入验证码
+     * 5.提交数据
+     *
+     * 需要提交的数据
+     * 1.新的邮箱地址
+     * 2验证阿门
+     * 3.提的信息可以从token里那
+     * @return
+     */
+    @PutMapping("/email")
+    public Result updateEmail(HttpServletRequest request,HttpServletResponse response,
+                              @RequestParam("email") String email,
+                              @RequestParam("verify_code") String verifyCode){
+
+        return userService.updateEmail(request,response,email,verifyCode);
+    }
+
+
 
     /**
      * 检查email是否唯一
@@ -251,6 +277,21 @@ public class UserController {
                         HttpServletRequest request,
                         HttpServletResponse response) {
         return userService.doLogin(captcha_key, captcha, user, request, response);
+    }
+
+
+    /**
+     * 拿到tokenkey
+     * 删除redis里的token
+     * 删除mysqk里的refreshtiken
+     * 删除cookie里的tokenkey
+     * @return
+     */
+    @GetMapping("/logout")
+    public Result logout(HttpServletRequest request,HttpServletResponse response){
+
+        return userService.logout(request,response);
+
     }
 
 }

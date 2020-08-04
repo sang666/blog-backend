@@ -43,4 +43,9 @@ public interface UserService extends IService<User> {
     Result listUserInfo(HttpServletRequest request, HttpServletResponse response, long current, long limit);
 
     Result updatePassword(String verifyCode, User user);
+
+    Result updateEmail(HttpServletRequest request, HttpServletResponse response, String email, String verifyCode);
+
+    Result logout(HttpServletRequest request, HttpServletResponse response);
+
 }

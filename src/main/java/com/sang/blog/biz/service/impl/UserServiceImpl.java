@@ -596,7 +596,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         long total = page.getTotal();//总记录数
         List<User> records = page.getRecords();
 
-        return Result.ok().data("total",total).data("rows",records);
+        return Result.ok().message("获取用户列表成功").data("total",total).data("rows",records);
     }
 
     /**
@@ -631,7 +631,72 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     public Result updatePassword(String verifyCode, User user) {
-        return null;
+        //检查是否有邮箱填写
+        String email = user.getEmail();
+        if (StringUtils.isEmpty(email)) {
+            return Result.err().message("邮箱验证码不能为空");
+        }
+        //根据邮箱去redis那验证码对比
+        String redisVerifyCode = (String) redisUtils.get(Constants.user.KEY_EMAIL_CODE_CONTENT+email);
+        if (redisVerifyCode == null || !redisVerifyCode.equals(verifyCode)) {
+            return Result.err().message("验证码错误");
+        }
+        //如果一样
+        redisUtils.del(Constants.user.KEY_EMAIL_CODE_CONTENT+email);
+        int result = userMapper.updatePasswordByEmail(bCryptPasswordEncoder.encode(user.getPassword()), email);
+
+
+        return result>0? Result.ok().message("密码修改成功"):Result.err().message("密码修改失败");
+    }
+
+    /**
+     * 更新邮箱地址
+     *
+     * @param request
+     * @param response
+     * @param email
+     * @param verifyCode
+     * @return
+     */
+    @Override
+    public Result updateEmail(HttpServletRequest request,
+                              HttpServletResponse response,
+                              String email, String verifyCode) {
+        //确保已经登录
+        User checkUser = checkUser(request, response);
+        if (checkUser == null) {
+            //没有登录
+            return Result.accountNotLogin();
+        }
+        //2对比验证吗，确保新的邮箱是属于新的用户的
+        String redisVerifyCode = (String) redisUtils.get(Constants.user.KEY_EMAIL_CODE_CONTENT + email);
+        if (StringUtils.isEmpty(redisVerifyCode) || !redisVerifyCode.equals(verifyCode)) {
+            return Result.err().message("验证码错误");
+        }
+        //可以修改了
+        int i = userMapper.updateEmailById(email, checkUser.getId());
+        return i>0? Result.ok().message("邮箱修改成功"):Result.err().message("邮箱修改失败");
+    }
+
+    /**
+     * 退出登录
+     * @param request
+     * @param response
+     * @return
+     */
+    @Override
+    public Result logout(HttpServletRequest request, HttpServletResponse response) {
+        String tokenKey = CookieUtils.getCookie(request, COOKIE_TOKEN_KEY);
+        if (StringUtils.isEmpty(tokenKey)) {
+            return Result.accountNotLogin();
+        }
+        //删除redis里的token
+        redisUtils.del(Constants.user.KEY_TOKEN+tokenKey);
+        //删除mysql里的refreshToken
+        refreshTokenMapper.deleteByTokenKey(tokenKey);
+        //删除cookies里的token_key
+        CookieUtils.deleteCookie(response, COOKIE_TOKEN_KEY);
+        return Result.ok().message("退出登陆成功");
     }
 
 
