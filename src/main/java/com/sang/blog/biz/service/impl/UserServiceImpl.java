@@ -57,7 +57,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private SnowflakeIdWorker snowflakeIdWorker;
     @Resource
     private UserMapper userMapper;
-    @Resource
+    @Autowired
     private SettingsMapper settingsMapper;
     @Autowired
     private Random random;
@@ -65,7 +65,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private RedisUtils redisUtils;
     @Autowired
     private TaskService taskService;
-    @Resource
+    @Autowired
     private RefreshTokenMapper refreshTokenMapper;
     @Autowired
     private Gson gson;
@@ -560,15 +560,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     public Result deleteById(HttpServletRequest request, HttpServletResponse response, String id) {
-        //检查当前用户
-        User checkUser = checkUser(request, response);
-        if (checkUser == null) {
-            return Result.accountNotLogin();
-        }
-        //判断角色
-        if (!Constants.user.ROLE_ADMIN.equals(checkUser.getRoles())){
-            return Result.PERMISSION_FORBID();
-        }
         //可以操作了
         int deleteById = userMapper.deleteById(id);
         if (deleteById>0) {
@@ -592,24 +583,55 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public Result listUserInfo(HttpServletRequest request, HttpServletResponse response, long current, long limit) {
 
-        //检查当前用户
-        User checkUser = checkUser(request, response);
-        if (checkUser == null) {
-            return Result.accountNotLogin();
-        }
-        //判断角色
-        if (!Constants.user.ROLE_ADMIN.equals(checkUser.getRoles())){
-            return Result.PERMISSION_FORBID();
-        }
+
         //可以获取用户列表
         //创建page对象
         Page<User> page = new Page<>(current,limit);
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
+        //查询部分字段，不查密码
+        wrapper.select("id","user_name","roles","avatar","email",
+                "sign","state","reg_ip","login_ip","create_time","update_time");
 
-        userMapper.selectPage(page,null);
+        userMapper.selectPage(page,wrapper);
         long total = page.getTotal();//总记录数
         List<User> records = page.getRecords();
 
         return Result.ok().data("total",total).data("rows",records);
+    }
+
+    /**
+     * 更新密码
+     *
+     * 更新密码
+     * 修改密码
+     * 普通做法：通过旧密码来对比
+     *
+     * <p>
+     * 既可以找回密码也可以修改密码
+     * 发送验证码到邮箱手机--->判断验证码是否正确来判断
+     * 发送邮箱所注册的账号是否属于你
+     * <p>
+     *
+     * 步骤：
+     * 1.用户填写邮箱
+     * 2.用户获取验证码type (forget)
+     * 3.填写验证码
+     * 4.用户填写新的密码
+     * 5.提交数据
+     *
+     * 数据包括
+     * 1.邮箱和新密码
+     * 2.验证吗
+     *
+     * 如果验证码正确，所用邮箱注册的账号就是你的，可以修改密码
+     *
+     * @param verifyCode
+     * @param user
+     * @return
+     */
+    @Override
+    public Result updatePassword(String verifyCode, User user) {
+        return null;
     }
 
 

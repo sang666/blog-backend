@@ -49,11 +49,39 @@ public class Result {
         return result;
     }
 
+    public static Result ERROR_403() {
+        Result result = new Result();
+        result.setSuccess(false);
+        result.setCode(ResultCode.ERROR_403);
+        result.setMessage("权限不足");
+        return result;
+    }
+    public static Result ERROR_404() {
+        Result result = new Result();
+        result.setSuccess(false);
+        result.setCode(ResultCode.ERROR_404);
+        result.setMessage("页面丢失");
+        return result;
+    }
+    public static Result ERROR_504() {
+        Result result = new Result();
+        result.setSuccess(false);
+        result.setCode(ResultCode.ERROR_504);
+        result.setMessage("系统繁忙");
+        return result;
+    }
+    public static Result ERROR_505() {
+        Result result = new Result();
+        result.setSuccess(false);
+        result.setCode(ResultCode.ERROR_505);
+        result.setMessage("权限不足");
+        return result;
+    }
     public static Result PERMISSION_FORBID() {
         Result result = new Result();
         result.setSuccess(false);
-        result.setCode(ResultCode.PERMISSION_FORBID);
-        result.setMessage("权限不足");
+        result.setCode(ResultCode.PERMISSION_DENIED);
+        result.setMessage("请求错误，请检查所提交数据");
         return result;
     }
 

@@ -41,4 +41,6 @@ public interface UserService extends IService<User> {
     Result deleteById(HttpServletRequest request, HttpServletResponse response, String id);
 
     Result listUserInfo(HttpServletRequest request, HttpServletResponse response, long current, long limit);
+
+    Result updatePassword(String verifyCode, User user);
 }

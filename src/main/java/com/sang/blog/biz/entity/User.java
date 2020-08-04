@@ -10,6 +10,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -22,6 +23,7 @@ import org.springframework.format.annotation.DateTimeFormat;
  * @since 2020-07-03
  */
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
 @TableName("tb_user")
@@ -29,6 +31,30 @@ import org.springframework.format.annotation.DateTimeFormat;
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    public User(String id,
+                String userName,
+                String roles,
+                String avatar,
+                String email,
+                String sign,
+                Integer state,
+                String regIp,
+                String loginIp,
+                Date createTime,
+                Date updateTime) {
+        this.id = id;
+        this.userName = userName;
+        this.roles = roles;
+        this.avatar = avatar;
+        this.email = email;
+        this.sign = sign;
+        this.state = state;
+        this.regIp = regIp;
+        this.loginIp = loginIp;
+        this.createTime = createTime;
+        this.updateTime = updateTime;
+    }
 
     @ApiModelProperty(value = "ID")
     @TableId(value = "id", type = IdType.ID_WORKER_STR)

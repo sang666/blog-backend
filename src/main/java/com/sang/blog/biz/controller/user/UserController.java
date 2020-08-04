@@ -5,6 +5,7 @@ import com.sang.blog.biz.service.UserService;
 import com.sang.blog.commom.result.Result;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -50,6 +51,7 @@ public class UserController {
      * @param limit
      * @return
      */
+    @PreAuthorize("@permission.admin()")
     @GetMapping("/{current}/{limit}")
     public Result listUserInfo(HttpServletRequest request,
                                HttpServletResponse response,
@@ -65,6 +67,7 @@ public class UserController {
      * @param id
      * @return
      */
+    @PreAuthorize("@permission.admin()")
     @DeleteMapping("/{userId}")
     public Result deleteUserInfo(HttpServletRequest request,
                                  HttpServletResponse response,
@@ -94,6 +97,42 @@ public class UserController {
 
         return userService.updateByUserId(id,user,request,response);
     }
+
+    /**
+     * 更新密码
+     * 修改密码
+     * 普通做法：通过旧密码来对比
+     *
+     * <p>
+     * 既可以找回密码也可以修改密码
+     * 发送验证码到邮箱手机--->判断验证码是否正确来判断
+     * 发送邮箱所注册的账号是否属于你
+     * <p>
+     *
+     * 步骤：
+     * 1.用户填写邮箱
+     * 2.用户获取验证码type (forget)
+     * 3.填写验证码
+     * 4.用户填写新的密码
+     * 5.提交数据
+     *
+     * 数据包括
+     * 1.邮箱和新密码
+     * 2.验证吗
+     *
+     * 如果验证码正确，所用邮箱注册的账号就是你的，可以修改密码
+     *
+     * @param verifyCode
+     * @param user
+     * @return
+     */
+    @PutMapping("/password/{verifyCode}")
+    public Result updatePassword(@PathVariable("verifyCode") String verifyCode, @RequestBody User user){
+
+        return userService.updatePassword(verifyCode,user);
+    }
+
+
 
     /**
      * 检查email是否唯一
