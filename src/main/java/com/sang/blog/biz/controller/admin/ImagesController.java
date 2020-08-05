@@ -2,8 +2,12 @@ package com.sang.blog.biz.controller.admin;
 
 
 import com.sang.blog.biz.entity.Images;
+import com.sang.blog.biz.service.ImagesService;
 import com.sang.blog.commom.result.Result;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * <p>
@@ -16,49 +20,32 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/biz/images")
 public class ImagesController {
+    @Autowired
+    private ImagesService imagesService;
 
 
     /**
-     * @param images
+     * @param imageId
      * @return
      */
-    @PostMapping
-    public Result addImage(@RequestBody Images images) {
+    @DeleteMapping("/{imageId}")
+    @PreAuthorize("@permission.admin()")
+    public Result deleteImage(@PathVariable("imageId") String imageId) {
 
-        return Result.ok();
-    }
-
-    /**
-     * @param id
-     * @return
-     */
-    @DeleteMapping("/{id}")
-    public Result deleteImage(@PathVariable String id) {
-
-        return Result.ok();
+        return imagesService.deleteImage(imageId);
     }
 
 
-    /**
-     * @param id
-     * @param images
-     * @return
-     */
-    @PutMapping("/{id}")
-    public Result updateImage(@PathVariable String id, @RequestBody Images images) {
-
-        return Result.ok();
-    }
-
 
     /**
-     * @param id
+     * @param imageId
      * @return
      */
-    @GetMapping("/{id}")
-    public Result getImage(@PathVariable String id) {
+    @GetMapping("/{imageId}")
+    @PreAuthorize("@permission.admin()")
+    public Result getImage(@PathVariable("imageId") String imageId) {
 
-        return Result.ok();
+        return imagesService.getImage(imageId);
     }
 
     /**
@@ -67,9 +54,10 @@ public class ImagesController {
      * @return
      */
     @GetMapping("/list/{current}/{limit}")
-    public Result listImage(@PathVariable String current, @PathVariable String limit) {
+    @PreAuthorize("@permission.admin()")
+    public Result listImage(@PathVariable("current") long current, @PathVariable("limit") long limit) {
 
-        return Result.ok();
+        return imagesService.listImage(current,limit);
     }
 
 }

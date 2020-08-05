@@ -29,6 +29,7 @@ public class PermissionService {
         HttpServletRequest request = requestAttributes.getRequest();
         HttpServletResponse response = requestAttributes.getResponse();
 
+
         String toToken = CookieUtils.getCookie(request, Constants.user.COOKIE_TOKEN_KEY);
         if (StringUtils.isEmpty(toToken)) {
             return false;

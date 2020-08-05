@@ -51,6 +51,7 @@ import static com.sang.blog.commom.utils.Constants.user.COOKIE_TOKEN_KEY;
 @Transactional
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
+
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
     @Autowired

@@ -30,6 +30,7 @@ public interface UserService extends IService<User> {
     User checkUser(HttpServletRequest request, HttpServletResponse response);
 
 
+
     Result getUserInfo(String userId);
 
     Result updateByUserId(String id, User user, HttpServletRequest request, HttpServletResponse response);

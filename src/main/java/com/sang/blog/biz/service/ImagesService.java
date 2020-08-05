@@ -2,6 +2,7 @@ package com.sang.blog.biz.service;
 
 import com.sang.blog.biz.entity.Images;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.sang.blog.commom.result.Result;
 
 /**
  * <p>
@@ -13,4 +14,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface ImagesService extends IService<Images> {
 
+    Result getImage(String imageId);
+
+    Result deleteImage(String imageId);
+
+    Result listImage(long current, long limit);
 }
