@@ -2,6 +2,7 @@ package com.sang.blog.biz.service;
 
 import com.sang.blog.biz.entity.Categories;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.sang.blog.commom.result.Result;
 
 /**
  * <p>
@@ -13,4 +14,13 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface CategoriesService extends IService<Categories> {
 
+    Result addCategory(Categories categories);
+
+    Result getCategory(String id);
+
+    Result listCategory(long current, long limit);
+
+    Result updateCategory(String categoryId, Categories categories);
+
+    Result deleteCategory(String categoryId);
 }

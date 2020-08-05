@@ -377,6 +377,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!captcha.equals(captchaValue)) {
             return Result.err().message("人类验证码不正确");
         }
+
+        //验证成功，使用之后删除redis里的验证码
+        redisUtils.del(Constants.user.KEY_COPTCHA_CONTENT + captcha_key);
         //有可能是邮箱，也有可能是用户名
         String userName = user.getUserName();
         if (StringUtils.isEmpty(userName)) {
@@ -719,13 +722,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //如果前端访问的时候携带md5key，从redis中获取即可
         String tokenKey = DigestUtils.md5DigestAsHex(token.getBytes());
         //保存token到redis中，有效期为2个小时,key是tokenKey
-        redisUtils.set(Constants.user.KEY_TOKEN + tokenKey, token, 2 * Constants.TimeValue.HOUR);
+        redisUtils.set(Constants.user.KEY_TOKEN + tokenKey, token, Constants.TimeValueInMillions.HOUR_2);
         //把token写到cookies里
         //这个要动态获取，可以从request中获取，后面后工具类
         CookieUtils.setUpCookie(response, Constants.user.COOKIE_TOKEN_KEY, tokenKey);
         //生成refreshToken
 
-        String refreshTokenValue = JwtUtil.createRefreshToken(userFromDb.getId(), Constants.TimeValue.MONTH);
+        String refreshTokenValue = JwtUtil.createRefreshToken(userFromDb.getId(), Constants.TimeValueInMillions.MONTH);
         //:保存到数据库里
         //table:   refreshToken,tokenKey,userId,createTime，updateTime
         RefreshToken refreshToken = new RefreshToken();

@@ -48,6 +48,7 @@ public class Categories implements Serializable {
     private Integer order;
 
     @ApiModelProperty(value = "状态：1表示不使用，0表示正常")
+    @TableLogic
     private Boolean status;
 
     @ApiModelProperty(value = "创建时间")

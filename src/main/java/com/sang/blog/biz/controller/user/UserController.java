@@ -191,7 +191,7 @@ public class UserController {
      * @return
      */
     @ApiOperation(value = "获取用户信息" )
-    @GetMapping("/{userId}")
+    @GetMapping("/user_info/{userId}")
     public Result getUserInfo(@PathVariable("userId") String userId) {
         return userService.getUserInfo(userId);
     }
@@ -201,7 +201,7 @@ public class UserController {
      * @return
      */
     @ApiOperation(value = "注册")
-    @PostMapping
+    @PostMapping("/join_in")
     public Result register(@RequestBody User user,
                            @RequestParam("email_code") String emailCode,
                            @RequestParam("captcha_code") String captchaCode,
@@ -270,7 +270,7 @@ public class UserController {
      * @return
      */
     @ApiOperation(value = "登录方法")
-    @PostMapping("/{captcha}/{captcha_key}")
+    @PostMapping("/login/{captcha}/{captcha_key}")
     public Result login(@PathVariable("captcha_key") String captcha_key,
                         @PathVariable("captcha") String captcha,
                         @RequestBody User user,

@@ -6,6 +6,7 @@ import com.sang.blog.biz.service.CategoriesService;
 import com.sang.blog.commom.result.Result;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -22,68 +23,83 @@ import javax.annotation.Resource;
 @RequestMapping("/biz/categories")
 public class CategoriesController {
 
+
     @Autowired
     private CategoriesService categoriesService;
 
 
     /**
+     *
+     * 需要管理员权限
      * @param categories
      * @return
      */
+    @PreAuthorize("@permission.admin()")
     @PostMapping("/addCat")
     public Result addCategory(@RequestBody Categories categories) {
-        boolean save = categoriesService.save(categories);
-        if (!save) {
-            return Result.err();
-        }
-        return Result.ok();
+
+        return categoriesService.addCategory(categories);
 
     }
 
     /**
-     * @param id
+     * 需要管理员权限
+     * @param categoryId
      * @return
      */
-    @DeleteMapping("/{id}")
-    public Result deleteCategory(@PathVariable String id) {
+    @PreAuthorize("@permission.admin()")
+    @DeleteMapping("/{categoryId}")
+    public Result deleteCategory(@PathVariable("categoryId") String categoryId) {
 
-        return Result.ok();
+
+        return categoriesService.deleteCategory(categoryId);
 
     }
 
     /**
-     * @param id
+     * 管理员权限
+     * 修改 名称 拼音 描述 名称
+     * @param categoryId
      * @param categories
      * @return
      */
-    @PutMapping("/{id}")
-    public Result updateCategory(@PathVariable String id, @RequestBody Categories categories) {
+    @PreAuthorize("@permission.admin()")
+    @PutMapping("/{categoryId}")
+    public Result updateCategory(@PathVariable("categoryId") String categoryId, @RequestBody Categories categories) {
 
-        return Result.ok();
+        return categoriesService.updateCategory(categoryId,categories);
 
     }
 
     /**
+     * 获取分类
+     * 使用的case 修改的时候，获取一下，填充弹窗
+     * 不获取也是可以的，从列表里获取数据
+     * 需要管理员权限
+     *
      * @param id
      * @return
      */
-    @GetMapping("/{id}")
-    public Result getCategory(@PathVariable String id) {
+    @PreAuthorize("@permission.admin()")
+    @GetMapping("/{categoryId}")
+    public Result getCategory(@PathVariable("categoryId") String id) {
 
-        return Result.ok();
+        return categoriesService.getCategory(id);
 
     }
 
     /**
+     * 管理员权限
      * @param current
      * @param limit
      * @return
      */
+    @PreAuthorize("@permission.admin()")
     @GetMapping("/list/{current}/{limit}")
-    public Result listCategory(@PathVariable @ApiParam("当前页") long current,
-                               @PathVariable @ApiParam("每页n条") long limit) {
+    public Result listCategory(@PathVariable("current") @ApiParam("当前页") long current,
+                               @PathVariable("limit")  @ApiParam("每页n条") long limit) {
 
-        return Result.ok();
+        return categoriesService.listCategory(current,limit);
 
     }
 

@@ -37,4 +37,18 @@ public interface Constants {
 
     }
 
+    /**
+     * 单位是毫秒
+     */
+    interface TimeValueInMillions {
+
+        int MIN = 60*1000;
+        int HOUR = 60 * MIN;
+        long HOUR_2 = 2 * 60 * 60 * 1000;
+        long DAY = HOUR * 24;
+        long WEEK = 7 * DAY;
+        long MONTH = 30 * DAY;
+
+    }
+
 }
