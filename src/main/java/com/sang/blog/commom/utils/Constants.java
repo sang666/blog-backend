@@ -20,6 +20,11 @@ public interface Constants {
 
     interface settings {
         String MANAGER_ACCOUNT_INIT_STATE = "MANAGER_ACCOUNT_INIT_STATE";
+        String WEB_SITE_TITLE = "web_site_title";
+        String WEB_SITE_DESCRIPTION = "web_site_description";
+        String WEB_SITE_KEYWORDS = "web_site_keywords";
+
+        String WEB_SITE_VIEW_COUNT = "web_site_view_count";
     }
 
 
@@ -50,5 +55,7 @@ public interface Constants {
         long MONTH = 30 * DAY;
 
     }
+
+
 
 }

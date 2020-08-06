@@ -1,7 +1,9 @@
 package com.sang.blog.biz.controller.admin;
 
 
+import com.sang.blog.biz.service.WebSiteInfoService;
 import com.sang.blog.commom.result.Result;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -12,14 +14,18 @@ import org.springframework.web.bind.annotation.*;
 public class WebSiteInfoController {
 
 
+    @Autowired
+    private WebSiteInfoService webSiteInfoService;
+
+
     /**
      * @param id
      * @return
      */
     @GetMapping("{id}")
-    public Result getWebSiteInfo(@PathVariable String id) {
+    public Result getWebSiteInfo(@PathVariable("id") String id) {
 
-        return Result.ok();
+        return webSiteInfoService.getWebSiteInfo(id);
     }
 
     /**
@@ -28,7 +34,7 @@ public class WebSiteInfoController {
     @GetMapping("/title")
     public Result getWebSiteTitle() {
 
-        return Result.ok();
+        return webSiteInfoService.getWebSiteTitle();
     }
 
     /**
@@ -36,9 +42,9 @@ public class WebSiteInfoController {
      * @return
      */
     @PutMapping("/title/{title}")
-    public Result updateWebSiteTitle(@PathVariable String title) {
+    public Result updateWebSiteTitle(@PathVariable("title") String title) {
 
-        return Result.ok();
+        return webSiteInfoService.putWebSiteTitle(title);
     }
 
     /**
@@ -47,7 +53,7 @@ public class WebSiteInfoController {
     @GetMapping("/seo")
     public Result getSeoInfo() {
 
-        return Result.ok();
+        return webSiteInfoService.getSeoInfo( );
     }
 
     /**
@@ -59,7 +65,7 @@ public class WebSiteInfoController {
     public Result putSeoInfo(@RequestParam String keywords,
                              @RequestParam String description) {
 
-        return Result.ok();
+        return webSiteInfoService.putSeoInfo(keywords,description);
     }
 
 
@@ -69,6 +75,6 @@ public class WebSiteInfoController {
     @GetMapping("/view_count")
     public Result getWebSiteCount() {
 
-        return Result.ok();
+        return webSiteInfoService.getWebSiteCount();
     }
 }

@@ -36,7 +36,6 @@ public class Settings implements Serializable {
 
     @ApiModelProperty(value = "键")
     @TableField(value = "`key`")
-    @TableLogic
     private String key;
 
     @ApiModelProperty(value = "值")
@@ -52,7 +51,7 @@ public class Settings implements Serializable {
     @ApiModelProperty(value = "更新时间")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @TableField(fill = FieldFill.INSERT)
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date updateTime;
 
 
