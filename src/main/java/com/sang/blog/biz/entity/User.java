@@ -28,33 +28,10 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Accessors(chain = true)
 @TableName("tb_user")
 @ApiModel(value = "User对象", description = "")
-public class User implements Serializable {
+public class  User implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    public User(String id,
-                String userName,
-                String roles,
-                String avatar,
-                String email,
-                String sign,
-                Integer state,
-                String regIp,
-                String loginIp,
-                Date createTime,
-                Date updateTime) {
-        this.id = id;
-        this.userName = userName;
-        this.roles = roles;
-        this.avatar = avatar;
-        this.email = email;
-        this.sign = sign;
-        this.state = state;
-        this.regIp = regIp;
-        this.loginIp = loginIp;
-        this.createTime = createTime;
-        this.updateTime = updateTime;
-    }
 
     @ApiModelProperty(value = "ID")
     @TableId(value = "id", type = IdType.ID_WORKER_STR)

@@ -57,5 +57,8 @@ public class Images implements Serializable {
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date updateTime;
 
+    @ApiModelProperty(value = "图片原名")
+    private String name;
+
 
 }

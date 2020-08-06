@@ -1,9 +1,11 @@
 package com.sang.blog.biz.controller.admin;
 
 
-import com.sang.blog.biz.entity.Images;
 import com.sang.blog.biz.entity.Looper;
+import com.sang.blog.biz.service.LooperService;
 import com.sang.blog.commom.result.Result;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -18,47 +20,55 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/biz/looper")
 public class LooperController {
 
+    @Autowired
+    private LooperService looperService;
+
+
     /**
      * @param looper
      * @return
      */
     @PostMapping
+    @PreAuthorize("@permission.admin()")
     public Result addLooper(@RequestBody Looper looper) {
 
-        return Result.ok();
+        return looperService.addLooper(looper);
     }
 
     /**
-     * @param id
+     * @param looperId
      * @return
      */
-    @DeleteMapping("/{id}")
-    public Result deleteLooper(@PathVariable String id) {
+    @DeleteMapping("/{looperId}")
+    @PreAuthorize("@permission.admin()")
+    public Result deleteLooper(@PathVariable("looperId") String looperId) {
 
-        return Result.ok();
+        return looperService.deleteLooper(looperId);
     }
 
 
     /**
-     * @param id
+     * @param looperId
      * @param looper
      * @return
      */
-    @PutMapping("/{id}")
-    public Result updateLooper(@PathVariable String id, @RequestBody Looper looper) {
+    @PutMapping("/{looperId}")
+    @PreAuthorize("@permission.admin()")
+    public Result updateLooper(@PathVariable("looperId") String looperId, @RequestBody Looper looper) {
 
-        return Result.ok();
+        return looperService.updateLooper(looperId,looper);
     }
 
 
     /**
-     * @param id
+     * @param looperId
      * @return
      */
-    @GetMapping("/{id}")
-    public Result getLooper(@PathVariable String id) {
+    @GetMapping("/{looperId}")
+    @PreAuthorize("@permission.admin()")
+    public Result getLooper(@PathVariable("looperId") String looperId) {
 
-        return Result.ok();
+        return looperService.getLooper(looperId);
     }
 
     /**
@@ -67,9 +77,10 @@ public class LooperController {
      * @return
      */
     @GetMapping("/list/{current}/{limit}")
-    public Result listLooper(@PathVariable long current, @PathVariable long limit) {
+    @PreAuthorize("@permission.admin()")
+    public Result listLooper(@PathVariable("current") long current, @PathVariable("limit") long limit) {
 
-        return Result.ok();
+        return looperService.listLooper(current,limit);
     }
 
 

@@ -2,7 +2,9 @@ package com.sang.blog.biz.controller.admin;
 
 
 import com.sang.blog.biz.entity.Images;
+import com.sang.blog.biz.service.FileUploadService;
 import com.sang.blog.biz.service.ImagesService;
+import com.sang.blog.biz.vo.FileUploadResult;
 import com.sang.blog.commom.result.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,6 +24,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class ImagesController {
     @Autowired
     private ImagesService imagesService;
+    @Autowired
+    private FileUploadService fileUploadService;
 
 
     /**
@@ -58,6 +62,21 @@ public class ImagesController {
     public Result listImage(@PathVariable("current") long current, @PathVariable("limit") long limit) {
 
         return imagesService.listImage(current,limit);
+    }
+
+
+
+    /**
+     * @author lastwhisper
+     * @desc 文件上传到oss
+     * @return FileUploadResult
+     * @Param uploadFile
+     */
+    @PreAuthorize("@permission.admin()")
+    @PostMapping("/upload")
+    public FileUploadResult upload(@RequestParam("file") MultipartFile uploadFile)
+            throws Exception {
+        return this.fileUploadService.upload(uploadFile);
     }
 
 }

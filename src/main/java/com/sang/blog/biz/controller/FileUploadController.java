@@ -30,13 +30,13 @@ public class FileUploadController {
      * @return FileUploadResult
      * @Param uploadFile
      */
-    @PreAuthorize("@permission.admin()")
+    /*@PreAuthorize("@permission.admin()")
 
     @PostMapping("/upload")
     public FileUploadResult upload(@RequestParam("file") MultipartFile uploadFile)
             throws Exception {
         return this.fileUploadService.upload(uploadFile);
-    }
+    }*/
 
     /**
      * @return FileUploadResult
@@ -45,7 +45,7 @@ public class FileUploadController {
      * @author lastwhisper
      * @Param objectName
      */
-    @RequestMapping("/delete")
+    @DeleteMapping("/delete")
     @PreAuthorize("@permission.admin()")
     public FileUploadResult delete(@RequestParam("fileName") String objectName)
             throws Exception {
@@ -59,7 +59,7 @@ public class FileUploadController {
      * @return List<OSSObjectSummary>
      * @Param
      */
-    @RequestMapping("/list")
+    @GetMapping("/list")
     @PreAuthorize("@permission.admin()")
     public List<OSSObjectSummary> list()
             throws Exception {
@@ -72,7 +72,7 @@ public class FileUploadController {
      * @return
      * @Param objectName
      */
-    @RequestMapping("/download")
+    @GetMapping("/download")
     @PreAuthorize("@permission.admin()")
     public void download(@RequestParam("fileName") String objectName, HttpServletResponse response) throws IOException {
         //通知浏览器以附件形式下载
