@@ -13,7 +13,7 @@ public class SearchPorTalController {
 
 
     @GetMapping
-    public Result doSearh(@RequestParam String keyword, @RequestParam int page) {
+    public Result doSearch(@RequestParam String keyword, @RequestParam int page) {
         return null;
     }
 }

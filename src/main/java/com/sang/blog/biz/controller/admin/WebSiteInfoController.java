@@ -4,6 +4,7 @@ package com.sang.blog.biz.controller.admin;
 import com.sang.blog.biz.service.WebSiteInfoService;
 import com.sang.blog.commom.result.Result;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -23,6 +24,7 @@ public class WebSiteInfoController {
      * @return
      */
     @GetMapping("{id}")
+    @PreAuthorize("@permission.admin()")
     public Result getWebSiteInfo(@PathVariable("id") String id) {
 
         return webSiteInfoService.getWebSiteInfo(id);
@@ -32,6 +34,7 @@ public class WebSiteInfoController {
      * @return
      */
     @GetMapping("/title")
+    @PreAuthorize("@permission.admin()")
     public Result getWebSiteTitle() {
 
         return webSiteInfoService.getWebSiteTitle();
@@ -42,6 +45,7 @@ public class WebSiteInfoController {
      * @return
      */
     @PutMapping("/title/{title}")
+    @PreAuthorize("@permission.admin()")
     public Result updateWebSiteTitle(@PathVariable("title") String title) {
 
         return webSiteInfoService.putWebSiteTitle(title);
@@ -51,6 +55,7 @@ public class WebSiteInfoController {
      * @return
      */
     @GetMapping("/seo")
+    @PreAuthorize("@permission.admin()")
     public Result getSeoInfo() {
 
         return webSiteInfoService.getSeoInfo( );
@@ -62,6 +67,7 @@ public class WebSiteInfoController {
      * @return
      */
     @PutMapping("/seo")
+    @PreAuthorize("@permission.admin()")
     public Result putSeoInfo(@RequestParam String keywords,
                              @RequestParam String description) {
 
@@ -73,6 +79,7 @@ public class WebSiteInfoController {
      * @return
      */
     @GetMapping("/view_count")
+    @PreAuthorize("@permission.admin()")
     public Result getWebSiteCount() {
 
         return webSiteInfoService.getWebSiteCount();

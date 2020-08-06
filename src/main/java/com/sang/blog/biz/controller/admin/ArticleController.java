@@ -2,9 +2,12 @@ package com.sang.blog.biz.controller.admin;
 
 
 import com.sang.blog.biz.entity.Article;
-import com.sang.blog.biz.entity.Looper;
+import com.sang.blog.biz.service.ArticleService;
+import com.sang.blog.biz.vo.ArticleQuery;
 import com.sang.blog.commom.result.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -21,15 +24,19 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/biz/article")
 public class ArticleController {
 
+    @Autowired
+    private ArticleService articleService;
+
 
     /**
      * @param article
      * @return
      */
     @PostMapping
+    @PreAuthorize("@permission.admin()")
     public Result addArticle(@RequestBody Article article) {
 
-        return Result.ok();
+        return articleService.postArticle(article);
     }
 
     /**
@@ -37,9 +44,9 @@ public class ArticleController {
      * @return
      */
     @DeleteMapping("/{id}")
-    public Result deleteArticle(@PathVariable String id) {
+    public Result deleteArticle(@PathVariable("id") String id) {
 
-        return Result.ok();
+        return articleService.deleteArticle(id);
     }
 
 
@@ -49,9 +56,9 @@ public class ArticleController {
      * @return
      */
     @PutMapping("/{id}")
-    public Result updateArticle(@PathVariable String id, @RequestBody Article article) {
+    public Result updateArticle(@PathVariable("id") String id, @RequestBody Article article) {
 
-        return Result.ok();
+        return articleService.updateArticle(id,article);
     }
 
 
@@ -60,20 +67,21 @@ public class ArticleController {
      * @return
      */
     @GetMapping("/{id}")
-    public Result getArticle(@PathVariable String id) {
+    public Result getArticle(@PathVariable("id") String id) {
 
-        return Result.ok();
+        return articleService.getArticleById(id);
     }
 
     /**
+     * 条件分页查询
      * @param current
      * @param limit
      * @return
      */
-    @GetMapping("/list/{current}/{limit}")
-    public Result listArticle(@PathVariable long current, @PathVariable long limit) {
+    @PostMapping("/list/{current}/{limit}")
+    public Result listArticle(@PathVariable("current") long current, @PathVariable("limit") long limit,@RequestBody(required = false) ArticleQuery articleQuery) {
 
-        return Result.ok();
+        return articleService.listArticle(current,limit,articleQuery);
     }
 
 
