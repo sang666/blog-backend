@@ -93,9 +93,12 @@ public class ArticleController {
      */
     @PostMapping("/list/{current}/{limit}")
     @PreAuthorize("@permission.admin()")
-    public Result listArticle(@PathVariable("current") long current, @PathVariable("limit") long limit,@RequestBody(required = false) ArticleQuery articleQuery) {
+    public Result listArticle(@PathVariable("current") long current,
+                              @PathVariable("limit") long limit,
+                              Integer state,
+                              String name,String categoryId,String begin,String end,String labels) {
 
-        return articleService.listArticle(current,limit,articleQuery);
+        return articleService.listArticle(current,limit,state,name,categoryId,begin,end,labels,null);
     }
 
 

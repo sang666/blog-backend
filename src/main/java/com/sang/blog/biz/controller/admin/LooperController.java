@@ -72,15 +72,15 @@ public class LooperController {
     }
 
     /**
-     * @param current
-     * @param limit
+     * @param
+     * @param
      * @return
      */
-    @GetMapping("/list/{current}/{limit}")
+    @GetMapping("/list")
     @PreAuthorize("@permission.admin()")
-    public Result listLooper(@PathVariable("current") long current, @PathVariable("limit") long limit) {
+    public Result listLooper() {
 
-        return looperService.listLooper(current,limit);
+        return looperService.listLooper();
     }
 
 

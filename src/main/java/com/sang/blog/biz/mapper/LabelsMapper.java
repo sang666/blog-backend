@@ -13,4 +13,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface LabelsMapper extends BaseMapper<Labels> {
 
+    Labels selectByName(String label);
+
+    int updateCountByName(String labelName);
 }

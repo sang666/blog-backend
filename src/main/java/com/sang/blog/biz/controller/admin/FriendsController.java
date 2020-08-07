@@ -73,16 +73,15 @@ public class FriendsController {
     }
 
     /**
-     * @param current
-     * @param limit
+     * @param
+     * @param
      * @return
      */
     @PreAuthorize("@permission.admin()")
-    @GetMapping("/list/{current}/{limit}")
-    public Result listFriends(@PathVariable("current") long current,
-                              @PathVariable("limit") long limit) {
+    @GetMapping("/list")
+    public Result listFriends() {
 
-        return friendsService.listFriendLind(current,limit);
+        return friendsService.listFriendLind();
     }
 
 }

@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.sang.blog.biz.mapper.LabelsMapper">
+    <update id="updateCountByName">
+        update tb_labels set `count`=`count`+1 where `name`=#{labelName}
+    </update>
 
+    <select id="selectByName" resultType="com.sang.blog.biz.entity.Labels">
+        select * from tb_labels where `name` = #{label}
+    </select>
 </mapper>

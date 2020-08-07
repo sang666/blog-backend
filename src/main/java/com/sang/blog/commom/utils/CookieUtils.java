@@ -1,9 +1,13 @@
 package com.sang.blog.commom.utils;
 
+import lombok.extern.slf4j.Slf4j;
+
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+
+@Slf4j
 public class CookieUtils {
 
     public static final int default_age = 60 * 60 * 24 * 365;
@@ -49,6 +53,10 @@ public class CookieUtils {
      */
     public static String getCookie(HttpServletRequest request, String key) {
         Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            log.info("cookies is null....");
+            return null;
+        }
 
         for (Cookie cookie : cookies) {
             if (key.equals(cookie.getName())) {

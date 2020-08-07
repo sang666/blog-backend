@@ -22,5 +22,5 @@ public interface LooperService extends IService<Looper> {
 
     Result updateLooper(String looperId, Looper looper);
 
-    Result listLooper(long current, long limit);
+    Result listLooper();
 }

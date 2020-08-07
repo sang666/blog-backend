@@ -1,7 +1,5 @@
 package com.sang.blog.biz.service.impl;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.sang.blog.biz.entity.Categories;
 import com.sang.blog.biz.entity.Friends;
 import com.sang.blog.biz.mapper.FriendsMapper;
 import com.sang.blog.biz.service.FriendsService;
@@ -73,19 +71,18 @@ public class FriendsServiceImpl extends ServiceImpl<FriendsMapper, Friends> impl
 
     /**
      * 获取有脸列表
-     * @param current
-     * @param limit
      * @return
      */
     @Override
-    public Result listFriendLind(long current, long limit) {
+    public Result listFriendLind() {
 
-        Page<Friends> page = new Page<>(current,limit);
+        /*Page<Friends> page = new Page<>(current,limit);
         friendsMapper.selectPage(page,null);
         long total = page.getTotal();//总记录数
-        List<Friends> records = page.getRecords();
+        List<Friends> records = page.getRecords();*/
         //进行查询
-        return Result.ok().message("获取友链列表成功").data("total",total).data("rows",records);
+        List<Friends> friends = friendsMapper.selectList(null);
+        return Result.ok().message("获取友链列表成功").data("item",friends);
     }
 
     /**

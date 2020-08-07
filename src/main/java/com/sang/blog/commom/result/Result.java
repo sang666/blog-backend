@@ -81,7 +81,7 @@ public class Result {
         Result result = new Result();
         result.setSuccess(false);
         result.setCode(ResultCode.PERMISSION_DENIED);
-        result.setMessage("请求错误，请检查所提交数据");
+        result.setMessage("权限不足");
         return result;
     }
 

@@ -18,7 +18,9 @@ public interface ArticleService extends IService<Article> {
 
     Result postArticle(Article article);
 
-    Result listArticle(long current, long limit, ArticleQuery articleQuery);
+    Result listArticle(long current, long limit,Integer state,
+                       String name,String categoryId,
+                       String begin,String end,String labels,String labelsLike);
 
     Result getArticleById(String id);
 
@@ -29,4 +31,8 @@ public interface ArticleService extends IService<Article> {
     Result deleteArticleByState(String articleId);
 
     Result topArticle(String id);
+
+    Result listRecommendArticles(String id, Integer size);
+
+    Result listLabels(Integer size);
 }

@@ -18,7 +18,7 @@ public interface FriendsService extends IService<Friends> {
 
     Result getFriend(String friendLinkId);
 
-    Result listFriendLind(long current, long limit);
+    Result listFriendLind();
 
     Result updateFriendLink(String id, Friends friends);
 

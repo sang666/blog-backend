@@ -3,14 +3,17 @@ package com.sang.blog.biz.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sang.blog.biz.entity.Article;
+import com.sang.blog.biz.entity.Labels;
 import com.sang.blog.biz.entity.User;
 import com.sang.blog.biz.mapper.ArticleMapper;
+import com.sang.blog.biz.mapper.LabelsMapper;
 import com.sang.blog.biz.service.ArticleService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sang.blog.biz.service.UserService;
 import com.sang.blog.biz.vo.ArticleQuery;
 import com.sang.blog.commom.result.Result;
 import com.sang.blog.commom.utils.Constants;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,7 +25,10 @@ import sun.security.krb5.internal.rcache.DflCache;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import static com.sang.blog.commom.utils.Constants.Article.SUMMARY_MAX_LENGTH;
 
@@ -36,6 +42,7 @@ import static com.sang.blog.commom.utils.Constants.Article.SUMMARY_MAX_LENGTH;
  */
 @Service
 @Transactional
+@Slf4j
 public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> implements ArticleService {
 
     @Autowired
@@ -43,6 +50,12 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Autowired
     private ArticleMapper articleMapper;
+
+    @Autowired
+    private Random random;
+
+    @Autowired
+    private LabelsMapper labelsMapper;
 
     /**
      * 添加文章
@@ -160,6 +173,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         articleMapper.insert(article);
 
         //TODO：保存到搜索的数据库里
+        //打散标签，存到数据库
+        this.setupLabels(article.getLabels());
         //返回结果,前端拿到id，只有一种case使用到这个id
         //如果要做程序自动保存成草稿（比若说每30秒保存一次，就需要加上这个id了，否则会创建多个item）
         return Result.ok().message(Constants.Article.STATE_DRAFT.equals(state)?"草稿保存成功":
@@ -170,21 +185,23 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
      * 打出文章列表(带条件查询)
      * @param current
      * @param limit
-     * @param articleQuery
+     * @param
      * @return
      */
     @Override
-    public Result listArticle(long current, long limit, ArticleQuery articleQuery) {
+    public Result listArticle(long current, long limit,Integer state,
+                              String name,String categoryId,
+                              String begin,String end,String labels,String labelsLike) {
 
         //创建page对象
         Page<Article> page = new Page<>(current,limit);
         //构建条件
         QueryWrapper<Article> wrapper = new QueryWrapper<>();
 
-        String name = articleQuery.getName();
+        /*String name = articleQuery.getName();
         String categoryId = articleQuery.getCategoryId();
         String begin = articleQuery.getBegin();
-        String end = articleQuery.getEnd();
+        String end = articleQuery.getEnd();*/
         //spring包中的stringUtils工具类
 
         //判断条件是否为空，如果为空就拼接条件
@@ -204,10 +221,23 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             wrapper.le("update_time",end);
         }
 
+        if (!StringUtils.isEmpty(String.valueOf(state))){
+            wrapper.eq("state",state);
+        }
+
+        if (!StringUtils.isEmpty(labels)){
+            wrapper.like("labels",labels);
+        }
+
+        if (!StringUtils.isEmpty(labelsLike)){
+            wrapper.like("labels",labelsLike);
+        }
+
         //排序
         wrapper.orderByDesc("update_time");
         wrapper.select("id","title","user_id","category_id","type","cover",
                 "state","summary","labels","view_count","create_time","update_time");
+
 
         articleMapper.selectPage(page,wrapper);
         long total = page.getTotal();//总记录数
@@ -243,8 +273,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         }
         //如果是删除/草稿，需要管理员角色
         User checkUser = userService.checkUser(request, response);
-        String roles = checkUser.getRoles();
-        if (!Constants.user.ROLE_ADMIN.equals(roles)) {
+        //String roles = checkUser.getRoles();
+        if (checkUser==null || !Constants.user.ROLE_ADMIN.equals(checkUser.getRoles())) {
             return Result.PERMISSION_FORBID();
         }
         //返回结果
@@ -369,4 +399,107 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         return Result.err().message("不支持该操作");
 
     }
+
+
+    /**
+     *
+     * 获取推荐文章，通过标签来计算
+     * @param id
+     * @param size
+     * @return
+     */
+    @Override
+    public Result listRecommendArticles(String id, Integer size) {
+        //查询文章，不需要文章，只需要标签
+        String labels = articleMapper.listArticleLabelsById(id);
+        log.info("labels---->"+labels);
+        //打散标签
+        List<String>labelList = new ArrayList<>();
+        if (!labels.contains("-")) {
+            labelList.add(labels);
+        }else {
+            labelList.addAll(Arrays.asList(labels.split("-")));
+        }
+        //从列表中随机获取一个标签，查询与此标签相似的文章
+        String targetLabel = labelList.get(random.nextInt(labelList.size()));
+        //不查询内容
+        log.info("随机获取的是--->"+targetLabel);
+        //创建page对象
+        Page<Article> page = new Page<>(1,size);
+        //构建条件
+        QueryWrapper<Article> wrapper = new QueryWrapper<>();
+        wrapper.select("id","title","user_id","category_id","type","cover",
+                "state","summary","labels","view_count","create_time","update_time");
+        wrapper.or(i -> i.eq("state",Constants.Article.STATE_PUBLISH).or().eq("state",Constants.Article.STATE_TOP));
+        wrapper.and(i->i.like("labels",targetLabel));
+
+
+
+        articleMapper.selectPage(page,wrapper);
+        long total = page.getTotal();//总记录数
+        List<Article> records = page.getRecords();
+
+        //TODO:这个功能砍了，不想写了
+        /*if (total<size){
+            //说明数量不够，补充新文章
+            Integer dxSize = size-total;
+            //
+        }*/
+        return Result.ok().data("total",total).data("rows",records);
+    }
+
+    /**
+     * 标签云
+     * @param size
+     * @return
+     */
+    @Override
+    public Result listLabels(Integer size) {
+
+        Page<Labels> page = new Page<>(1,size);
+        QueryWrapper<Labels> wrapper = new QueryWrapper<>();
+
+        wrapper.orderByDesc("count");
+        labelsMapper.selectPage(page,wrapper);
+        long total = page.getTotal();//总记录数
+        List<Labels> records = page.getRecords();
+
+        return Result.ok().message("获取标签列表成功").data("total",total).data("rows",records);
+    }
+
+
+    private void  setupLabels(String labels){
+
+        ArrayList<String> labelList = new ArrayList<>();
+        if (labels.contains("-")) {
+            labelList.addAll(Arrays.asList(labels.split("-")));
+        }else {
+            labelList.add(labels);
+        }
+
+        //入库
+
+        for (String label : labelList) {
+            /*//找出来
+            Labels targetLabel = labelsMapper.selectByName(label);
+            if (targetLabel == null) {
+                targetLabel=new Labels();
+                targetLabel.setCount(0);
+                targetLabel.setName(label);
+            }
+            Integer count = targetLabel.getCount();
+            targetLabel.setCount(++count);*/
+            int result = labelsMapper.updateCountByName(label);
+            if (result==0) {
+                Labels targetLabel=new Labels();
+                targetLabel.setCount(1);
+                targetLabel.setName(label);
+                labelsMapper.insert(targetLabel);
+            }
+
+        }
+
+    }
+
+
 }

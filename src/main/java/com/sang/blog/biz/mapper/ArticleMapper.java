@@ -16,4 +16,6 @@ public interface ArticleMapper extends BaseMapper<Article> {
     int deleteByState(String articleId);
 
     int topArticle(String articleId);
+
+    String listArticleLabelsById(String id);
 }

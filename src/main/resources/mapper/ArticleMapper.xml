@@ -10,4 +10,8 @@
     <update id="topArticle">
         update tb_article set state = '3' where id = #{articleId}
     </update>
+
+    <select id="listArticleLabelsById" resultType="java.lang.String">
+        select labels from tb_article where id =#{id}
+    </select>
 </mapper>

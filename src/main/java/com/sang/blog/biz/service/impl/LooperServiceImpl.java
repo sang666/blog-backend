@@ -1,7 +1,6 @@
 package com.sang.blog.biz.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.sang.blog.biz.entity.Images;
 import com.sang.blog.biz.entity.Looper;
 import com.sang.blog.biz.mapper.LooperMapper;
 import com.sang.blog.biz.service.LooperService;
@@ -120,14 +119,11 @@ public class LooperServiceImpl extends ServiceImpl<LooperMapper, Looper> impleme
     }
 
     @Override
-    public Result listLooper(long current, long limit) {
+    public Result listLooper() {
 
 
-        Page<Looper> page = new Page<>(current,limit);
-        looperMapper.selectPage(page,null);
-        long total = page.getTotal();//总记录数
-        List<Looper> records = page.getRecords();
+        List<Looper> loopers = looperMapper.selectList(null);
         //进行查询
-        return Result.ok().message("获取轮播图列表成功").data("total",total).data("rows",records);
+        return Result.ok().message("获取轮播图列表成功").data("loopers",loopers);
     }
 }
