@@ -35,4 +35,6 @@ public interface ArticleService extends IService<Article> {
     Result listRecommendArticles(String id, Integer size);
 
     Result listLabels(Integer size);
+
+    Result getArticleByIdNoContent(String id);
 }

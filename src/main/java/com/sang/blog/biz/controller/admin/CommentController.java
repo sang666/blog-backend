@@ -3,8 +3,13 @@ package com.sang.blog.biz.controller.admin;
 
 import com.sang.blog.biz.entity.Article;
 import com.sang.blog.biz.entity.Comment;
+import com.sang.blog.biz.service.CommentService;
 import com.sang.blog.commom.result.Result;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * <p>
@@ -17,6 +22,18 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/biz/comment")
 public class CommentController {
+
+
+    @Autowired
+    private CommentService commentService;
+
+
+
+    @PostMapping("/comment")
+    public Result addComment(@RequestBody Comment comment, HttpServletRequest request, HttpServletResponse response){
+
+        return Result.ok();
+    }
 
 
     /**

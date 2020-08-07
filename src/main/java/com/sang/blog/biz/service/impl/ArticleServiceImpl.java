@@ -467,6 +467,43 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         return Result.ok().message("获取标签列表成功").data("total",total).data("rows",records);
     }
 
+    /**
+     * 得到一篇文章没有内容数据
+     * @param id
+     * @return
+     */
+    @Override
+    public Result getArticleByIdNoContent(String id) {
+        //拿到request和response
+        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletRequest request = requestAttributes.getRequest();
+        HttpServletResponse response = requestAttributes.getResponse();
+        //查询出文章
+
+        QueryWrapper<Article> wrapper = new QueryWrapper<>();
+        wrapper.eq("id",id);
+        wrapper.select("id","title","user_id","category_id","type","cover",
+                "state","summary","labels","view_count","create_time","update_time");
+        Article selectById = articleMapper.selectOne(wrapper);
+        if (selectById == null) {
+            return Result.err().message("文章不存在");
+        }
+        //判断文章状态
+        Integer state = selectById.getState();
+        if (Constants.Article.STATE_PUBLISH.equals(state) || Constants.Article.STATE_TOP.equals(state)) {
+            //直接返回
+            return Result.ok().message("获取文章成功").data("article",selectById);
+        }
+        //如果是删除/草稿，需要管理员角色
+        User checkUser = userService.checkUser(request, response);
+        //String roles = checkUser.getRoles();
+        if (checkUser==null || !Constants.user.ROLE_ADMIN.equals(checkUser.getRoles())) {
+            return Result.PERMISSION_FORBID();
+        }
+        //返回结果
+        return Result.ok().message("获取文章成功").data("article",selectById);
+    }
+
 
     private void  setupLabels(String labels){
 

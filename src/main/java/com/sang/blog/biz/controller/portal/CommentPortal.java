@@ -2,21 +2,30 @@ package com.sang.blog.biz.controller.portal;
 
 
 import com.sang.blog.biz.entity.Comment;
+import com.sang.blog.biz.service.CommentService;
 import com.sang.blog.commom.result.Result;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/protal/comment")
 public class CommentPortal {
+    @Autowired
+    private CommentService commentService;
 
     /**
+     *
+     * 添加评论
      * @param comment
      * @return
      */
-    @PostMapping
-    public Result addComment(@RequestBody Comment comment) {
+    @PostMapping("/comment")
+    public Result addComment(@RequestBody Comment comment, HttpServletRequest request, HttpServletResponse response){
 
-        return Result.ok();
+        return commentService.addComment(comment,request,response);
     }
 
     /**
@@ -24,14 +33,15 @@ public class CommentPortal {
      * @return
      */
     @DeleteMapping("/{commentId}")
-    public Result deleteComment(@PathVariable String commentId) {
+    public Result deleteComment(@PathVariable String commentId,
+                                HttpServletRequest request,HttpServletResponse response) {
 
-        return Result.ok();
+        return commentService.deleteCommentById(commentId,request,response);
     }
 
-    @GetMapping("/{articleId}")
-    public Result listComments(@PathVariable String articleId) {
+    @GetMapping("/{articleId}/{current}/{limit}")
+    public Result listComments(@PathVariable String articleId,@PathVariable long current,@PathVariable long limit) {
 
-        return Result.ok();
+        return commentService.listCommentById(articleId,current,limit);
     }
 }
