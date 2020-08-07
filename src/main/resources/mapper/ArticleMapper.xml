@@ -2,4 +2,12 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.sang.blog.biz.mapper.ArticleMapper">
 
+
+    <update id="deleteByState">
+        update tb_article set state = '1' where id = #{articleId}
+    </update>
+
+    <update id="topArticle">
+        update tb_article set state = '3' where id = #{articleId}
+    </update>
 </mapper>

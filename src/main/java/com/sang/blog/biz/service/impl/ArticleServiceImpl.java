@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import sun.security.krb5.internal.rcache.DflCache;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -92,7 +93,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         }
 
         //两种,草稿和发布
-        String state = article.getState();
+        Integer state = article.getState();
         if (!Constants.Article.STATE_PUBLISH.equals(state) && !Constants.Article.STATE_DRAFT.equals(state)){
             //不支持该操作
             return Result.err().message("不支持此操作");
@@ -235,7 +236,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             return Result.err().message("文章不存在");
         }
         //判断文章状态
-        String state = selectById.getState();
+        Integer state = selectById.getState();
         if (Constants.Article.STATE_PUBLISH.equals(state) || Constants.Article.STATE_TOP.equals(state)) {
             //直接返回
             return Result.ok().message("获取文章成功").data("article",selectById);
@@ -296,5 +297,76 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //修改
         //返回结果
         return Result.ok().message("文章更新成功");
+    }
+
+    /**
+     * 真删
+     * @param id
+     * @return
+     */
+    @Override
+    public Result deleteArticle(String id) {
+
+        Article article = articleMapper.selectById(id);
+        if (article == null) {
+            return Result.err().message("文章不存在");
+        }
+        int result = articleMapper.deleteById(id);
+        if (result>0) {
+            return Result.ok().message("文章删除成功");
+
+        }
+        return Result.err().message("文章删除失败");
+    }
+
+    /**
+     * 删除通过状态，逻辑删除
+     * @param articleId
+     * @return
+     */
+    @Override
+    public Result deleteArticleByState(String articleId) {
+
+        int result = articleMapper.deleteByState(articleId);
+        if (result>0) {
+            return Result.ok().message("文章删除成功");
+        }
+
+        return Result.err().message("文章不存在");
+    }
+
+
+    /**
+     * 置顶
+     * @param id
+     * @return
+     */
+
+     /*int result = articleMapper.topArticle(id);
+            if (result>0) {
+                return Result.ok().message("文章置顶成功");
+            }
+            return Result.err().message("文章不存在");*/
+    @Override
+    public Result topArticle(String id) {
+
+        //已经发布的才能置顶
+        Article article = articleMapper.selectById(id);
+        if (article == null) {
+                return Result.err().message("文章不存在");
+        }
+        Integer state = article.getState();
+        if (Constants.Article.STATE_PUBLISH.equals(state)) {
+
+            article.setState(Constants.Article.STATE_TOP);
+            articleMapper.updateById(article);
+            return Result.ok().message("文章置顶成功");
+        }if (Constants.Article.STATE_TOP.equals(state)){
+            article.setState(Constants.Article.STATE_PUBLISH);
+            articleMapper.updateById(article);
+            return Result.ok().message("已取消置顶");
+        }
+        return Result.err().message("不支持该操作");
+
     }
 }

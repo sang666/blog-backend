@@ -25,4 +25,8 @@ public interface ArticleService extends IService<Article> {
     Result updateArticle(String id, Article article);
 
     Result deleteArticle(String id);
+
+    Result deleteArticleByState(String articleId);
+
+    Result topArticle(String id);
 }

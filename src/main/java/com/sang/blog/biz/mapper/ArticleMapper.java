@@ -13,4 +13,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface ArticleMapper extends BaseMapper<Article> {
 
+    int deleteByState(String articleId);
+
+    int topArticle(String articleId);
 }

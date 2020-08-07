@@ -62,10 +62,10 @@ public interface Constants {
         int SUMMARY_MAX_LENGTH = 128;
 
         //状态（0表示删除，1表示发布，2表示草稿,3表示置顶）
-        String STATE_DELETE = "0";
-        String STATE_PUBLISH = "1";
-        String STATE_DRAFT = "2";
-        String STATE_TOP = "3";
+        Integer STATE_DELETE = 1;
+        Integer STATE_PUBLISH = 0;
+        Integer STATE_DRAFT = 2;
+        Integer STATE_TOP = 3;
 
 
     }

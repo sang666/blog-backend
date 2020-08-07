@@ -40,13 +40,24 @@ public class ArticleController {
     }
 
     /**
+     *
+     * 真删！！
      * @param id
      * @return
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("@permission.admin()")
     public Result deleteArticle(@PathVariable("id") String id) {
 
         return articleService.deleteArticle(id);
+    }
+
+
+    @DeleteMapping("/state/{articleId}")
+    @PreAuthorize("@permission.admin()")
+    public Result deleteArticleByUpdateState(@PathVariable("articleId")String articleId){
+
+        return articleService.deleteArticleByState(articleId);
     }
 
 
@@ -56,6 +67,7 @@ public class ArticleController {
      * @return
      */
     @PutMapping("/{id}")
+    @PreAuthorize("@permission.admin()")
     public Result updateArticle(@PathVariable("id") String id, @RequestBody Article article) {
 
         return articleService.updateArticle(id,article);
@@ -67,6 +79,7 @@ public class ArticleController {
      * @return
      */
     @GetMapping("/{id}")
+    @PreAuthorize("@permission.admin()")
     public Result getArticle(@PathVariable("id") String id) {
 
         return articleService.getArticleById(id);
@@ -79,6 +92,7 @@ public class ArticleController {
      * @return
      */
     @PostMapping("/list/{current}/{limit}")
+    @PreAuthorize("@permission.admin()")
     public Result listArticle(@PathVariable("current") long current, @PathVariable("limit") long limit,@RequestBody(required = false) ArticleQuery articleQuery) {
 
         return articleService.listArticle(current,limit,articleQuery);
@@ -89,21 +103,23 @@ public class ArticleController {
      * @param state
      * @return
      */
-    @PutMapping("/sate/{id}/{state}")
+  /*  @PutMapping("/sate/{id}/{state}")
+    @PreAuthorize("@permission.admin()")
     public Result updateArticleState(@PathVariable String id, @PathVariable String state) {
 
         return Result.ok();
 
-    }
+    }*/
 
     /**
      * @param
      * @return
      */
     @PutMapping("/top/{id}")
-    public Result updateArticleTop(@PathVariable String id) {
+    @PreAuthorize("@permission.admin()")
+    public Result updateArticleTop(@PathVariable("id") String id) {
 
-        return Result.ok();
+        return articleService.topArticle(id);
 
     }
 

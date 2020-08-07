@@ -62,8 +62,9 @@ public class Article implements Serializable {
     @ApiModelProperty(value = "封面")
     private String cover;
 
-    @ApiModelProperty(value = "状态（0表示已发布，1表示发布，2表示草稿,3表示置顶）")
-    private String state="1";
+    @ApiModelProperty(value = "状态（0表示删除，1表示发布，2表示草稿,3表示置顶）")
+
+    private Integer state=0;
 
     @ApiModelProperty(value = "摘要")
     private String summary;
