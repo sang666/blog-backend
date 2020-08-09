@@ -6,6 +6,7 @@ import com.sang.blog.biz.mapper.SettingsMapper;
 import com.sang.blog.biz.service.WebSiteInfoService;
 import com.sang.blog.commom.result.Result;
 import com.sang.blog.commom.utils.Constants;
+import com.sang.blog.commom.utils.RedisUtils;
 import com.sang.blog.commom.utils.TextUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ public class WebSiteInfoServiceImpl implements WebSiteInfoService {
 
     @Autowired
     private SettingsMapper settingsMapper;
+
+    @Autowired
+    private RedisUtils redisUtils;
 
     /**
      * 获取网站title
@@ -133,14 +137,48 @@ public class WebSiteInfoServiceImpl implements WebSiteInfoService {
      */
     @Override
     public Result getWebSiteCount() {
-        Settings descriptionFromDB = settingsMapper.findOneByKey(Constants.settings.WEB_SITE_VIEW_COUNT);
-        if (descriptionFromDB == null) {
-            descriptionFromDB=new Settings();
-            descriptionFromDB.setKey(Constants.settings.WEB_SITE_VIEW_COUNT);
-            descriptionFromDB.setValue("1");
-            settingsMapper.insert(descriptionFromDB);
+        //先从redis里拿出来
+        String viewCountStr = (String) redisUtils.get(Constants.settings.WEB_SITE_VIEW_COUNT);
+        Settings viewCount = settingsMapper.findOneByKey(Constants.settings.WEB_SITE_VIEW_COUNT);
+
+        if (viewCount == null) {
+            viewCount=new Settings();
+            viewCount.setKey(Constants.settings.WEB_SITE_VIEW_COUNT);
+            viewCount.setValue("1");
+            settingsMapper.insert(viewCount);
 
         }
-        return Result.ok().message("获取网络游览量成功").data("descriptionFromDB",descriptionFromDB);
+
+        if (StringUtils.isEmpty(viewCountStr)) {
+            viewCountStr = viewCount.getValue();
+            redisUtils.set(Constants.settings.WEB_SITE_VIEW_COUNT,viewCountStr);
+        }else {
+            //吧redis里的update到数据库里
+            viewCount.setValue(viewCountStr);
+            settingsMapper.updateById(viewCount);
+        }
+        HashMap<String, Integer> result = new HashMap<>();
+        result.put(viewCount.getKey(),Integer.valueOf(viewCount.getValue()));
+
+
+        return Result.ok().message("获取网络游览量成功").data("result",result);
+    }
+
+
+    /**
+     * 1.并发量
+     * 2.过滤相同的ip或id
+     * 3.防止攻击，超过一定次数的访问，就提示请稍后重试
+     */
+    @Override
+    public void updateViewCount() {
+        //redis的时机
+        Object viewCount = redisUtils.get(Constants.settings.WEB_SITE_VIEW_COUNT);
+        if (viewCount == null) {
+            Settings settings = settingsMapper.findOneByKey(Constants.settings.WEB_SITE_VIEW_COUNT);
+            redisUtils.set(Constants.settings.WEB_SITE_VIEW_COUNT,settings.getValue());
+        }
+        //数字自增
+        redisUtils.incr(Constants.settings.WEB_SITE_VIEW_COUNT,1);
     }
 }

@@ -1,14 +1,30 @@
 package com.sang.blog.biz.controller.admin;
 
 
+import com.sang.blog.biz.dao.ArticleSearchDao;
 import com.sang.blog.biz.entity.Article;
 import com.sang.blog.biz.service.ArticleService;
 import com.sang.blog.biz.vo.ArticleQuery;
+import com.sang.blog.biz.vo.ArticleSearch;
 import com.sang.blog.commom.result.Result;
+import com.sang.blog.commom.utils.Constants;
+import com.vladsch.flexmark.ext.jekyll.tag.JekyllTagExtension;
+import com.vladsch.flexmark.ext.tables.TablesExtension;
+import com.vladsch.flexmark.ext.toc.SimTocExtension;
+import com.vladsch.flexmark.ext.toc.TocExtension;
+import com.vladsch.flexmark.html.HtmlRenderer;
+import com.vladsch.flexmark.parser.Parser;
+import com.vladsch.flexmark.util.ast.Node;
+import com.vladsch.flexmark.util.data.MutableDataSet;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 /**
  * <p>
@@ -32,7 +48,7 @@ public class ArticleController {
      * @param article
      * @return
      */
-    @PostMapping
+    @PostMapping("/add")
     @PreAuthorize("@permission.admin()")
     public Result addArticle(@RequestBody Article article) {
 
@@ -126,5 +142,57 @@ public class ArticleController {
 
     }
 
+
+    @Autowired
+    private ArticleSearchDao articleSearchDao;
+    @PostMapping("/es/add")
+    public Result addArticle(){
+        List<Article> articleList = articleService.list(null);
+        for (Article article : articleList) {
+
+
+            String articleType = article.getType();
+            String html;
+            if (Constants.Article.TUPE_MARKDOWM.equals(articleType)) {
+                //转成html
+                MutableDataSet options = new MutableDataSet().set(Parser.EXTENSIONS, Arrays.asList(
+                        TablesExtension.create(),
+                        JekyllTagExtension.create(),
+                        TocExtension.create(),
+                        SimTocExtension.create()
+                ));
+                Parser parser = Parser.builder(options).build();
+                HtmlRenderer renderer = HtmlRenderer.builder(options).build();
+                Node document = parser.parse(article.getContent());
+                html = renderer.render(document);
+                //存到es数据库
+            }else {
+                html = article.getContent();
+            }
+            String content = Jsoup.parse(html).text();
+            ArticleSearch articleSearch = new ArticleSearch();
+            articleSearch.setId(article.getId());
+            articleSearch.setContent(content);
+            articleSearch.setSummary(article.getSummary());
+            articleSearch.setTitle(article.getTitle());
+            articleSearch.setLabels(article.getLabels());
+            articleSearch.setCategoryId(article.getCategoryId());
+            //log.info(article.getLabelList().listIterator().next());
+            articleSearchDao.save(articleSearch);
+
+        }
+
+        return Result.ok().message("台南佳成功");
+    }
+
+
+    /*@GetMapping("/es/select")
+    public Result selectArticle(){
+
+        Iterable<ArticleSearch> articles = articleSearchDao.findAll();
+
+        return Result.ok().data("dd",articles);
+    }
+*/
 
 }

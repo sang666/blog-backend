@@ -6,6 +6,7 @@ import com.sang.blog.biz.entity.Comment;
 import com.sang.blog.biz.service.CommentService;
 import com.sang.blog.commom.result.Result;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -41,9 +42,10 @@ public class CommentController {
      * @return
      */
     @DeleteMapping("/{id}")
-    public Result deleteComment(@PathVariable String id) {
+    @PreAuthorize("@permission.admin()")
+    public Result deleteComment(@PathVariable String id,HttpServletRequest request,HttpServletResponse response) {
 
-        return Result.ok();
+        return commentService.deleteCommentById(id,request,response);
     }
 
 
@@ -63,9 +65,10 @@ public class CommentController {
      * @return
      */
     @GetMapping("/list/{current}/{limit}")
+    @PreAuthorize("@permission.admin()")
     public Result listComment(@PathVariable long current, @PathVariable long limit) {
 
-        return Result.ok();
+        return commentService.listComment(current,limit);
     }
 
 
@@ -79,6 +82,6 @@ public class CommentController {
     public Result topComment(@PathVariable String id) {
 
 
-        return Result.ok();
+        return commentService.topComment(id);
     }
 }

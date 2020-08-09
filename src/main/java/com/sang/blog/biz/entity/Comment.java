@@ -54,7 +54,7 @@ public class Comment implements Serializable {
     private String userName;
 
     @ApiModelProperty(value = "状态（状态：1表示不使用，0表示正常）")
-    private Boolean state;
+    private Integer state;
 
     @ApiModelProperty(value = "创建时间")
     @DateTimeFormat(pattern = "yyyy-MM-dd")

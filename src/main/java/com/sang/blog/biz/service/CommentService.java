@@ -22,4 +22,8 @@ public interface CommentService extends IService<Comment> {
     Result listCommentById(String articleId, long current, long limit);
 
     Result deleteCommentById(String commentId, HttpServletRequest request, HttpServletResponse response);
+
+    Result listComment(long current, long limit);
+
+    Result topComment(String id);
 }

@@ -17,7 +17,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -102,6 +101,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         QueryWrapper<Comment> wrapper = new QueryWrapper<>();
 
         wrapper.eq("article_id",articleId);
+        wrapper.orderByDesc("create_time");
         commentMapper.selectPage(page,wrapper);
 
         long total = page.getTotal();
@@ -140,6 +140,52 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }else {
             return Result.PERMISSION_FORBID();
         }
+
+    }
+
+
+    /**
+     * 管理员，列出全部的评论
+     * @param current
+     * @param limit
+     * @return
+     */
+    @Override
+    public Result listComment(long current, long limit) {
+        Page<Comment> page = new Page<>(current, limit);
+        QueryWrapper<Comment> wrapper = new QueryWrapper<>();
+        wrapper.orderByDesc("create_time");
+        commentMapper.selectPage(page,wrapper);
+        long total = page.getTotal();
+        List<Comment> records = page.getRecords();
+
+        return Result.ok().message("管理员获取评论列表成功").data("total",total).data("rows",records);
+    }
+
+    /**
+     * 置顶
+     * @param id
+     * @return
+     */
+    @Override
+    public Result topComment(String id) {
+        Comment comment = commentMapper.selectById(id);
+        if (comment == null) {
+            return Result.err().message("评论不存在");
+        }
+        Integer state = comment.getState();
+        if (Constants.Comment.STATE_PUBLISH.equals(state)) {
+            comment.setState(Constants.Comment.STATE_TOP);
+            commentMapper.updateById(comment);
+            return Result.ok().message("置顶成功");
+        }else if (Constants.Comment.STATE_TOP.equals(state)){
+            comment.setState(Constants.Comment.STATE_PUBLISH);
+            commentMapper.updateById(comment);
+            return Result.ok().message("取消置顶");
+        }else {
+            return  Result.err().message("评论状态非法");
+        }
+
 
     }
 }

@@ -73,13 +73,13 @@ public class Article implements Serializable {
         //打散到集合里
         this.labelList.clear();
         if (this.labels!=null) {
-        if (!this.labels.contains("-")) {
-            this.labelList.add(this.labels);
-        }else {
-            String[]split = this.labels.split("-");
-            List<String> strings = Arrays.asList(split);
-            this.labelList.addAll(strings);
-        }
+            if (!this.labels.contains("-")) {
+                this.labelList.add(this.labels);
+            }else {
+                String[]split = this.labels.split("-");
+                List<String> strings = Arrays.asList(split);
+                this.labelList.addAll(strings);
+            }
         }
         return labels;
     }

@@ -2,7 +2,6 @@ package com.sang.blog.biz.service;
 
 import com.sang.blog.biz.entity.Article;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.sang.blog.biz.vo.ArticleQuery;
 import com.sang.blog.commom.result.Result;
 
 /**
@@ -36,5 +35,8 @@ public interface ArticleService extends IService<Article> {
 
     Result listLabels(Integer size);
 
+
     Result getArticleByIdNoContent(String id);
+
+    Result searchByContent(Integer page, Integer size, String keyword);
 }

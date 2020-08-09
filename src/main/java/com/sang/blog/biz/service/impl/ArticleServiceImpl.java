@@ -1,7 +1,9 @@
 package com.sang.blog.biz.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.sang.blog.biz.dao.ArticleSearchDao;
 import com.sang.blog.biz.entity.Article;
 import com.sang.blog.biz.entity.Labels;
 import com.sang.blog.biz.entity.User;
@@ -10,25 +12,38 @@ import com.sang.blog.biz.mapper.LabelsMapper;
 import com.sang.blog.biz.service.ArticleService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sang.blog.biz.service.UserService;
-import com.sang.blog.biz.vo.ArticleQuery;
+import com.sang.blog.biz.vo.ArticleSearch;
 import com.sang.blog.commom.result.Result;
 import com.sang.blog.commom.utils.Constants;
+import com.vladsch.flexmark.ext.jekyll.tag.JekyllTagExtension;
+import com.vladsch.flexmark.ext.tables.TablesExtension;
+import com.vladsch.flexmark.ext.toc.SimTocExtension;
+import com.vladsch.flexmark.ext.toc.TocExtension;
+import com.vladsch.flexmark.html.HtmlRenderer;
+import com.vladsch.flexmark.parser.Parser;
+import com.vladsch.flexmark.util.ast.Node;
+import com.vladsch.flexmark.util.data.MutableDataSet;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+
+
+import org.elasticsearch.index.query.QueryStringQueryBuilder;
+
+import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import sun.security.krb5.internal.rcache.DflCache;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+
+import java.util.*;
 
 import static com.sang.blog.commom.utils.Constants.Article.SUMMARY_MAX_LENGTH;
 
@@ -46,6 +61,9 @@ import static com.sang.blog.commom.utils.Constants.Article.SUMMARY_MAX_LENGTH;
 public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> implements ArticleService {
 
     @Autowired
+    private ArticleSearchDao articleSearchDao;
+
+    @Autowired
     private UserService userService;
 
     @Autowired
@@ -56,6 +74,12 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Autowired
     private LabelsMapper labelsMapper;
+
+
+
+
+
+
 
     /**
      * 添加文章
@@ -171,14 +195,44 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         article.setUserName(user.getUserName());
         //保存到数据库
         articleMapper.insert(article);
+        //存到es搜索库
+        ArticleSearch articleSearch = new ArticleSearch();
+        articleSearch.setId(article.getId());
+        String articleType = article.getType();
 
-        //TODO：保存到搜索的数据库里
+        String html;
+        if (Constants.Article.TUPE_MARKDOWM.equals(articleType)) {
+            //转成html
+            MutableDataSet options = new MutableDataSet().set(Parser.EXTENSIONS,Arrays.asList(
+                    TablesExtension.create(),
+                    JekyllTagExtension.create(),
+                    TocExtension.create(),
+                    SimTocExtension.create()
+            ));
+            Parser parser = Parser.builder(options).build();
+            HtmlRenderer renderer = HtmlRenderer.builder(options).build();
+            Node document = parser.parse(article.getContent());
+             html = renderer.render(document);
+            //存到es数据库
+        }else {
+            html = article.getContent();
+        }
+
+        //到这里原来不管是什么都是html
+        String content = Jsoup.parse(html).text();
+        articleSearch.setContent(content);
+        articleSearch.setSummary(article.getSummary());
+        articleSearch.setTitle(article.getTitle());
+        articleSearch.setLabels(article.getLabels());
+        articleSearchDao.save(articleSearch);
+
+
         //打散标签，存到数据库
         this.setupLabels(article.getLabels());
         //返回结果,前端拿到id，只有一种case使用到这个id
         //如果要做程序自动保存成草稿（比若说每30秒保存一次，就需要加上这个id了，否则会创建多个item）
         return Result.ok().message(Constants.Article.STATE_DRAFT.equals(state)?"草稿保存成功":
-                "文章发表成功").data("id",article.getId());
+                "文章发表成功");
     }
 
     /**
@@ -293,36 +347,44 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     public Result updateArticle(String id, Article article) {
         //先找出来，没有就返回
         Article selectById = articleMapper.selectById(id);
+
         if (selectById == null) {
             return Result.err().message("文章不存在");
         }
-
+        ArticleSearch articleSearch = articleSearchDao.queryArticleSearchById(selectById.getId());
         String title = article.getTitle();
         if (!StringUtils.isEmpty(article.getTitle())) {
             selectById.setTitle(title);
+            articleSearch.setTitle(title);
         }
 
         String summary = article.getSummary();
         if (!StringUtils.isEmpty(article.getSummary())) {
             selectById.setSummary(summary);
+            articleSearch.setSummary(summary);
         }
 
         String content = article.getContent();
         if (!StringUtils.isEmpty(article.getContent())) {
             selectById.setContent(content);
+            articleSearch.setContent(content);
         }
 
         String labels = article.getLabels();
         if (!StringUtils.isEmpty(article.getLabels())) {
             selectById.setLabels(labels);
+            articleSearch.setLabels(labels);
         }
 
         String categoryId = article.getCategoryId();
         if (!StringUtils.isEmpty(article.getCategoryId())) {
             selectById.setCategoryId(categoryId);
+            articleSearch.setCategoryId(categoryId);
         }
 
         articleMapper.updateById(selectById);
+        //存到es搜索
+        articleSearchDao.save(articleSearch);
 
         //修改
         //返回结果
@@ -502,6 +564,37 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         }
         //返回结果
         return Result.ok().message("获取文章成功").data("article",selectById);
+    }
+
+    /**
+     * 查询
+     *
+     * @param page
+     * @param size
+     * @param keyword
+     * @return
+     */
+    @Override
+    public Result searchByContent(Integer page, Integer size, String keyword) {
+
+        // 定义高亮字段
+        //HighlightBuilder.Field titleField = new HighlightBuilder.Field("title").preTags("<span>").postTags("</span>");
+        //HighlightBuilder.Field contentField = new HighlightBuilder.Field("content").preTags("<span>").postTags("</span>");
+
+        // 构建查询内容
+        QueryStringQueryBuilder queryBuilder = new QueryStringQueryBuilder(keyword);
+        // 查询的字段
+        Pageable pageable = PageRequest.of(page, size);
+        queryBuilder.field("title").field("content").field("labels");
+        Iterable<ArticleSearch> searchResult = articleSearchDao.search(queryBuilder,pageable);
+        Iterator<ArticleSearch> iterator = searchResult.iterator();
+        List<ArticleSearch> list = new ArrayList<ArticleSearch>();
+        while (iterator.hasNext()) {
+            list.add(iterator.next());
+        }
+
+        return Result.ok().data("list",list);
+
     }
 
 
