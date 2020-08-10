@@ -44,9 +44,9 @@ public class BlogApplication {
         return new Random();
     }
 
-    @Bean
+    /*@Bean
     public Gson createGson(){
         return new Gson();
-    }
+    }*/
 
 }

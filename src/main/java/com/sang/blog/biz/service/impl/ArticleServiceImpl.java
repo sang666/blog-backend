@@ -2,12 +2,16 @@ package com.sang.blog.biz.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.sang.blog.biz.dao.ArticleSearchDao;
 import com.sang.blog.biz.entity.Article;
 import com.sang.blog.biz.entity.Labels;
 import com.sang.blog.biz.entity.User;
 import com.sang.blog.biz.mapper.ArticleMapper;
+import com.sang.blog.biz.mapper.CommentMapper;
 import com.sang.blog.biz.mapper.LabelsMapper;
 import com.sang.blog.biz.service.ArticleService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -15,6 +19,7 @@ import com.sang.blog.biz.service.UserService;
 import com.sang.blog.biz.vo.ArticleSearch;
 import com.sang.blog.commom.result.Result;
 import com.sang.blog.commom.utils.Constants;
+import com.sang.blog.commom.utils.RedisUtils;
 import com.vladsch.flexmark.ext.jekyll.tag.JekyllTagExtension;
 import com.vladsch.flexmark.ext.tables.TablesExtension;
 import com.vladsch.flexmark.ext.toc.SimTocExtension;
@@ -74,6 +79,15 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Autowired
     private LabelsMapper labelsMapper;
+
+    @Autowired
+    private RedisUtils redisUtils;
+
+    @Autowired
+    private Gson gson;
+    @Autowired
+    private CommentMapper commentMapper;
+
 
 
 
@@ -196,39 +210,45 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //保存到数据库
         articleMapper.insert(article);
         //存到es搜索库
-        ArticleSearch articleSearch = new ArticleSearch();
-        articleSearch.setId(article.getId());
-        String articleType = article.getType();
+        if (Constants.Article.STATE_PUBLISH.equals(article.getState())) {
+            ArticleSearch articleSearch = new ArticleSearch();
+            articleSearch.setId(article.getId());
+            String articleType = article.getType();
 
-        String html;
-        if (Constants.Article.TUPE_MARKDOWM.equals(articleType)) {
-            //转成html
-            MutableDataSet options = new MutableDataSet().set(Parser.EXTENSIONS,Arrays.asList(
-                    TablesExtension.create(),
-                    JekyllTagExtension.create(),
-                    TocExtension.create(),
-                    SimTocExtension.create()
-            ));
-            Parser parser = Parser.builder(options).build();
-            HtmlRenderer renderer = HtmlRenderer.builder(options).build();
-            Node document = parser.parse(article.getContent());
-             html = renderer.render(document);
-            //存到es数据库
-        }else {
-            html = article.getContent();
+            String html;
+            if (Constants.Article.TUPE_MARKDOWM.equals(articleType)) {
+                //转成html
+                MutableDataSet options = new MutableDataSet().set(Parser.EXTENSIONS,Arrays.asList(
+                        TablesExtension.create(),
+                        JekyllTagExtension.create(),
+                        TocExtension.create(),
+                        SimTocExtension.create()
+                ));
+                Parser parser = Parser.builder(options).build();
+                HtmlRenderer renderer = HtmlRenderer.builder(options).build();
+                Node document = parser.parse(article.getContent());
+                html = renderer.render(document);
+                //存到es数据库
+            }else {
+                html = article.getContent();
+            }
+
+            //到这里原来不管是什么都是html
+            String content = Jsoup.parse(html).text();
+            articleSearch.setContent(content);
+            articleSearch.setSummary(article.getSummary());
+            articleSearch.setTitle(article.getTitle());
+            articleSearch.setCategoryId(article.getCategoryId());
+            articleSearch.setLabels(article.getLabels());
+            articleSearchDao.save(articleSearch);
         }
 
-        //到这里原来不管是什么都是html
-        String content = Jsoup.parse(html).text();
-        articleSearch.setContent(content);
-        articleSearch.setSummary(article.getSummary());
-        articleSearch.setTitle(article.getTitle());
-        articleSearch.setLabels(article.getLabels());
-        articleSearchDao.save(articleSearch);
 
 
         //打散标签，存到数据库
         this.setupLabels(article.getLabels());
+        // 添加文章后删除redis里的缓存
+        redisUtils.del(Constants.Article.KEY_ARTICLE_LIST_FIRST_PAGE);
         //返回结果,前端拿到id，只有一种case使用到这个id
         //如果要做程序自动保存成草稿（比若说每30秒保存一次，就需要加上这个id了，否则会创建多个item）
         return Result.ok().message(Constants.Article.STATE_DRAFT.equals(state)?"草稿保存成功":
@@ -247,8 +267,16 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                               String name,String categoryId,
                               String begin,String end,String labels,String labelsLike) {
 
+        String articleListJson = (String) redisUtils.get(Constants.Article.KEY_ARTICLE_LIST_FIRST_PAGE);
+        if (!StringUtils.isEmpty(articleListJson)&&current==1) {
+            Page<Article>articleList = gson.fromJson(articleListJson,new TypeToken<Page<Article>>(){
+            }.getType());
+            log.info("使用redis缓存。。。。");
+            return Result.ok().message("文章列表获取成功").data("rows",articleList);
+        }
         //创建page对象
         Page<Article> page = new Page<>(current,limit);
+
         //构建条件
         QueryWrapper<Article> wrapper = new QueryWrapper<>();
 
@@ -293,11 +321,16 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 "state","summary","labels","view_count","create_time","update_time");
 
 
-        articleMapper.selectPage(page,wrapper);
-        long total = page.getTotal();//总记录数
-        List<Article> records = page.getRecords();//
+        IPage<Article> articleIPage = articleMapper.selectPage(page, wrapper);
+        //long total = page.getTotal();//总记录数
+        //List<Article> records = page.getRecords();//
+        //保存到redis
+        //List<Article> records = articleIPage.getRecords();
+        if (current==1) {
+            redisUtils.set(Constants.Article.KEY_ARTICLE_LIST_FIRST_PAGE,gson.toJson(articleIPage),Constants.TimeValue.MIN*15);
+        }
 
-        return Result.ok().data("total",total).data("rows",records);
+        return Result.ok().data("rows",articleIPage);
     }
 
     /**
@@ -305,6 +338,13 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
      * 如果有审核机制，审核中的文章只有管理员和作者可以获取
      * 有草稿的，删除，置顶，已经发布的
      * 删除的不能获取，其他的都可以
+     *
+     * 统计文章的阅读量，要精确一点的话要对ip进行处理，同一个ip的话则不保存
+     * 先把阅读量再redis里更新
+     * 文章也会在redis里缓存一份，比如缓存个十分钟
+     * 当文章没有的时候，从mysql中获取，这个时同时更新阅读量
+     * 十分钟以后在下一次访问的时候更新阅读量
+     *
      * @param id
      * @return
      */
@@ -315,6 +355,15 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         HttpServletRequest request = requestAttributes.getRequest();
         HttpServletResponse response = requestAttributes.getResponse();
         //查询出文章
+        //先从redis里获取文章
+        String articleJson = (String) redisUtils.get(Constants.Article.KEY_ARTICLE_CACHE + id);
+        if (!StringUtils.isEmpty(articleJson)) {
+            Article article = gson.fromJson(articleJson, Article.class);
+            //增加阅读数量
+            redisUtils.incr(Constants.Article.KEY_ARTICLE_CACHE_COUNT+id,1);
+            return Result.ok().message("获取文章成功").data("article",article);
+        }
+        //如果没有，再去数据库mysql里获取
         Article selectById = articleMapper.selectById(id);
         if (selectById == null) {
             return Result.err().message("文章不存在");
@@ -322,6 +371,21 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //判断文章状态
         Integer state = selectById.getState();
         if (Constants.Article.STATE_PUBLISH.equals(state) || Constants.Article.STATE_TOP.equals(state)) {
+            //正常发布的状态才可以增加阅读量
+            redisUtils.set(Constants.Article.KEY_ARTICLE_CACHE+id,gson.toJson(selectById),Constants.TimeValue.MIN*5);
+            //设置阅读量的key，先从redis里拿，如果redis里没有，就从article中去，并且添加到redis里
+            String viewCount= (String) redisUtils.get(Constants.Article.KEY_ARTICLE_CACHE_COUNT+id);
+            if (StringUtils.isEmpty(viewCount)) {
+                long newCount = selectById.getViewCount()+1;
+                redisUtils.set(Constants.Article.KEY_ARTICLE_CACHE_COUNT+id,String.valueOf(newCount));
+            }else {
+                //有的话就更新到mysql中
+                long newCount = redisUtils.incr(Constants.Article.KEY_ARTICLE_CACHE_COUNT+id,1);
+                selectById.setViewCount(newCount);
+                //更新搜索数据库里的阅读量
+                // TODO: 2020/8/10  更新搜索数据库里的阅读量
+                articleMapper.updateById(selectById);
+            }
             //直接返回
             return Result.ok().message("获取文章成功").data("article",selectById);
         }
@@ -405,6 +469,12 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         }
         int result = articleMapper.deleteById(id);
         if (result>0) {
+            redisUtils.del(Constants.Article.KEY_ARTICLE_CACHE+id);
+            redisUtils.del(Constants.Article.KEY_ARTICLE_LIST_FIRST_PAGE);
+            articleSearchDao.deleteById(id);
+            commentMapper.deleteById(id);
+
+
             return Result.ok().message("文章删除成功");
 
         }
@@ -421,7 +491,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
         int result = articleMapper.deleteByState(articleId);
         if (result>0) {
+            articleSearchDao.deleteById(articleId);
             return Result.ok().message("文章删除成功");
+
         }
 
         return Result.err().message("文章不存在");
@@ -567,7 +639,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     }
 
     /**
-     * 查询
+     * 搜索服务，乞丐版，能用就行
      *
      * @param page
      * @param size
@@ -581,23 +653,33 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //HighlightBuilder.Field titleField = new HighlightBuilder.Field("title").preTags("<span>").postTags("</span>");
         //HighlightBuilder.Field contentField = new HighlightBuilder.Field("content").preTags("<span>").postTags("</span>");
 
+        if (keyword == null) {
+            return Result.err().message("关键字不能为空");
+        }
+
+        // TODO: 2020/8/9 剩个高亮没整
         // 构建查询内容
         QueryStringQueryBuilder queryBuilder = new QueryStringQueryBuilder(keyword);
         // 查询的字段
         Pageable pageable = PageRequest.of(page, size);
         queryBuilder.field("title").field("content").field("labels");
+
         Iterable<ArticleSearch> searchResult = articleSearchDao.search(queryBuilder,pageable);
-        Iterator<ArticleSearch> iterator = searchResult.iterator();
+        /*Iterator<ArticleSearch> iterator = searchResult.iterator();
         List<ArticleSearch> list = new ArrayList<ArticleSearch>();
         while (iterator.hasNext()) {
             list.add(iterator.next());
-        }
+        }*/
 
-        return Result.ok().data("list",list);
+        return Result.ok().data("list",searchResult).message("搜索成功");
 
     }
 
 
+    /**
+     * 打散标签到列表
+     * @param labels
+     */
     private void  setupLabels(String labels){
 
         ArrayList<String> labelList = new ArrayList<>();

@@ -13,6 +13,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sang.blog.biz.service.UserService;
 import com.sang.blog.commom.result.Result;
 import com.sang.blog.commom.utils.Constants;
+import com.sang.blog.commom.utils.RedisUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private ArticleMapper articleMapper;
     @Autowired
     private CommentMapper commentMapper;
+    @Autowired
+    private RedisUtils redisUtils;
 
     @Autowired
     private ArticleService articleService;
@@ -97,6 +100,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      */
     @Override
     public Result listCommentById(String articleId, long current, long limit) {
+
+
         Page<Comment> page = new Page<>(current,limit);
         QueryWrapper<Comment> wrapper = new QueryWrapper<>();
 

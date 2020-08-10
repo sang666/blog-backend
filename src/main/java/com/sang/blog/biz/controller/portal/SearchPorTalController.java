@@ -3,7 +3,6 @@ package com.sang.blog.biz.controller.portal;
 
 import com.sang.blog.biz.service.ArticleService;
 import com.sang.blog.commom.result.Result;
-import org.elasticsearch.search.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

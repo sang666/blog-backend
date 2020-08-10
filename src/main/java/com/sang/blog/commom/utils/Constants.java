@@ -68,6 +68,9 @@ public interface Constants {
         Integer STATE_PUBLISH = 0;
         Integer STATE_DRAFT = 2;
         Integer STATE_TOP = 3;
+        String KEY_ARTICLE_CACHE = "key_article_cache_";
+        String KEY_ARTICLE_CACHE_COUNT= "key_article_cache_count_";
+        String KEY_ARTICLE_LIST_FIRST_PAGE = "key_article_list_first_page_";
 
 
     }
@@ -76,6 +79,7 @@ public interface Constants {
         //状态（0表示删除，1表示发布，2表示草稿,3表示置顶）
         Integer STATE_PUBLISH = 0;
         Integer STATE_TOP = 3;
+        String KEY_COMMENT_FIRST_PAGE_CACHE="key_comment_first_page_cache_";
 
 
     }
