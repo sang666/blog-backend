@@ -16,4 +16,12 @@ import org.springframework.stereotype.Repository;
 public interface RefreshTokenMapper extends BaseMapper<RefreshToken> {
 
     int deleteByTokenKey(String tokenKey);
+
+    int deleteMobileTokenKey(String getTokenKey);
+
+    int deletePcTokenKey(String getTokenKey);
+
+    RefreshToken selectOneByUserId(String id);
+
+    RefreshToken selectOneByMobileTokenKey(String mobileTokenKey);
 }

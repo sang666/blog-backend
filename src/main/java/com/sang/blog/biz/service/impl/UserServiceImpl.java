@@ -20,6 +20,7 @@ import com.wf.captcha.base.Captcha;
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.action.get.GetRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -365,6 +366,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @param captcha_key
      * @param captcha
      * @param user
+     * @param from
      * @return
      */
     @Override
@@ -372,8 +374,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                           String captcha,
                           User user,
                           HttpServletRequest request,
-                          HttpServletResponse response) {
+                          HttpServletResponse response,
+                          String from) {
 
+        //from可能没有值
+        //入宫没有值，就给他一个默认值
+        if (StringUtils.isEmpty(from)||
+                !Constants.FROM_MOBILE.equals(from)&&!Constants.FROM_PC.equals(from)) {
+            from = Constants.FROM_MOBILE;
+        }
         String captchaValue = (String) redisUtils.get(Constants.user.KEY_COPTCHA_CONTENT + captcha_key);
         if (!captcha.equals(captchaValue)) {
             return Result.err().message("人类验证码不正确");
@@ -417,9 +426,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!i.equals(userFromDb.getState())) {
             return Result.err().message("当前帐号已被禁止");
         }
-        createToken(response, userFromDb);
 
+        //修改更新时间和登录ip
+        userFromDb.setLoginIp(request.getRemoteAddr());
+        userMapper.updateById(userFromDb);
 
+        createToken(request,response, userFromDb,from);
         return Result.ok().message("登陆成功");
 
     }
@@ -437,27 +449,42 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         //拿到cookie
         String tokenKey = CookieUtils.getCookie(request, COOKIE_TOKEN_KEY);
+        if (StringUtils.isEmpty(tokenKey)) {
+            return null;
+        }
+        // token 中解析出此请求是什么端的
         User user = parseByTokenKey(tokenKey);
+        String from  =tokenKey.startsWith(Constants.FROM_PC)?Constants.FROM_PC:Constants.FROM_MOBILE;
+
         if (user == null) {
             //说明解析出错
             //去mysql数据库查询refreshToken
-            QueryWrapper<RefreshToken> refreshTokenQueryWrapper = new QueryWrapper<>();
-            refreshTokenQueryWrapper.eq("token_key", tokenKey);
-            RefreshToken refreshToken = refreshTokenMapper.selectOne(refreshTokenQueryWrapper);
+            //如果是从pc来的，就以pc的token_key来查
+            //如果是Mobile的就以mobile_key来查
+
+            RefreshToken refreshToken;
+            if (Constants.FROM_PC.equals(from)){
+                QueryWrapper<RefreshToken> refreshTokenQueryWrapper = new QueryWrapper<>();
+                refreshTokenQueryWrapper.eq("token_key", tokenKey);
+                 refreshToken = refreshTokenMapper.selectOne(refreshTokenQueryWrapper);
+            }else {
+                 refreshToken = refreshTokenMapper.selectOneByMobileTokenKey(tokenKey);
+
+            }
             //如果不存在，就是没登录,提示用户登录
             if (refreshToken == null) {
                 return null;
             }
             //如果存在，就解析
             try {
-
+                //这个解析有可能出错，就过期了
                 JwtUtil.parseJWT(refreshToken.getRefreshToken());
                 //如果有效创建新的token和新的refreshToken
                 String userId = refreshToken.getUserId();
                 User userFromDb = userMapper.selectById(userId);
                 //删掉refreshToken的记录
 
-                String newTokenKey = createToken(response, userFromDb);
+                String newTokenKey = createToken(request,response, userFromDb, from);
 
                 //返回token
                 return parseByTokenKey(newTokenKey);
@@ -694,10 +721,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (StringUtils.isEmpty(tokenKey)) {
             return Result.accountNotLogin();
         }
-        //删除redis里的token
+        //删除redis里的token，因为各端独立,所以可以删除
         redisUtils.del(Constants.user.KEY_TOKEN+tokenKey);
         //删除mysql里的refreshToken
-        refreshTokenMapper.deleteByTokenKey(tokenKey);
+        // 不错删除了，只做更新    refreshTokenMapper.deleteByTokenKey(tokenKey);
+
+        if (Constants.FROM_PC.startsWith(tokenKey)) {
+            refreshTokenMapper.deletePcTokenKey(tokenKey);
+        }else {
+            refreshTokenMapper.deleteMobileTokenKey(tokenKey);
+        }
+
         //删除cookies里的token_key
         CookieUtils.deleteCookie(response, COOKIE_TOKEN_KEY);
         return Result.ok().message("退出登陆成功");
@@ -709,36 +743,102 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      *
      * @param response
      * @param userFromDb
+     * @param from
      * @return tokenKey
      */
-    private String createToken(HttpServletResponse response, User userFromDb) {
-        QueryWrapper<RefreshToken> refreshTokenQueryWrapper = new QueryWrapper<>();
-        refreshTokenQueryWrapper.eq("user_id", userFromDb.getId());
-        refreshTokenMapper.delete(refreshTokenQueryWrapper);
-        //生成token
-        Map<String, Object> claims = claimsUtils.user2Claims(userFromDb);
+    private String createToken(HttpServletRequest request,HttpServletResponse response, User userFromDb, String from) {
+        String oldTokenKey = CookieUtils.getCookie(request, COOKIE_TOKEN_KEY);
+        //不能干掉了，
+        RefreshToken oldRefreshToken = refreshTokenMapper.selectOneByUserId(userFromDb.getId());
+        //删掉redis里的token，确保单端登录
+
+
+        if (Constants.FROM_MOBILE.equals(from)) {
+            if (oldRefreshToken != null) {
+                redisUtils.del(Constants.user.KEY_TOKEN+oldRefreshToken.getMobileTokenKey());
+
+            }
+            // 要根据来源删除refreshToken中对应的token_key
+            refreshTokenMapper.deleteMobileTokenKey(oldTokenKey);
+        }else if (Constants.FROM_PC.equals(from)){
+            if (oldRefreshToken != null) {
+                redisUtils.del(Constants.user.KEY_TOKEN+oldRefreshToken.getTokenKey());
+
+            }
+            refreshTokenMapper.deletePcTokenKey(oldTokenKey);
+        }
+
+        //生成token，claims已经包含from了
+        Map<String, Object> claims = claimsUtils.user2Claims(userFromDb,from);
         //token默认有效为两个小时
         String token = JwtUtil.createToken(claims);
         //返回token的md5值，token会保存在redis里
         //如果前端访问的时候携带md5key，从redis中获取即可
-        String tokenKey = DigestUtils.md5DigestAsHex(token.getBytes());
+        //from是加的前缀
+        String tokenKey =from+DigestUtils.md5DigestAsHex(token.getBytes());
         //保存token到redis中，有效期为2个小时,key是tokenKey
-        redisUtils.set(Constants.user.KEY_TOKEN + tokenKey, token, Constants.TimeValueInMillions.HOUR_2);
+        redisUtils.set(Constants.user.KEY_TOKEN + tokenKey, token, Constants.TimeValue.HOUR*2);
         //把token写到cookies里
         //这个要动态获取，可以从request中获取，后面后工具类
         CookieUtils.setUpCookie(response, Constants.user.COOKIE_TOKEN_KEY, tokenKey);
-        //生成refreshToken
+        //先判断数据库里有没有resreshthken，
+        // 如果有就更新，
+        // 如果没有就创建
+        RefreshToken refreshToken = refreshTokenMapper.selectOneByUserId(userFromDb.getId());
+        if (refreshToken == null) {
+            refreshToken = new RefreshToken();
+            refreshToken.setUserId(userFromDb.getId());
+            String refreshTokenValue = JwtUtil.createRefreshToken(userFromDb.getId(), Constants.TimeValueInMillions.MONTH);
+            refreshToken.setRefreshToken(refreshTokenValue);
+            if (Constants.FROM_PC.equals(from)) {
+                refreshToken.setTokenKey(tokenKey);
 
+            }else{
+                refreshToken.setMobileTokenKey(tokenKey);
+            }
+            refreshTokenMapper.insert(refreshToken);
+            return tokenKey;
+        }
+        //不管过期了,还是新登录都会生成/更新refreshToken
+        //生成refreshToken
         String refreshTokenValue = JwtUtil.createRefreshToken(userFromDb.getId(), Constants.TimeValueInMillions.MONTH);
         //:保存到数据库里
         //table:   refreshToken,tokenKey,userId,createTime，updateTime
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setRefreshToken(refreshTokenValue);
-        refreshToken.setUserId(userFromDb.getId());
-        refreshToken.setTokenKey(tokenKey);
 
-        refreshTokenMapper.insert(refreshToken);
+        refreshToken.setRefreshToken(refreshTokenValue);
+
+        //要判断来源，如果是移动端的就设置到移动端那里去
+        //如果是pc端的就设置到默认的
+        if (Constants.FROM_PC.equals(from)) {
+            refreshToken.setTokenKey(tokenKey);
+
+        }else{
+            refreshToken.setMobileTokenKey(tokenKey);
+        }
+        refreshTokenMapper.updateById(refreshToken);
+        //old:        refreshTokenMapper.insert(refreshToken);
         return tokenKey;
+    }
+
+
+    /**
+     * 解析次token是pc端来的还是移动端来的，使用要判空
+     * @param tokenKey
+     * @return
+     */
+    private String parseFrom(String tokenKey ){
+        //拿到cookie
+        String token = (String) redisUtils.get(Constants.user.KEY_TOKEN + tokenKey);
+        if (token != null) {
+            try {
+                Claims claims = JwtUtil.parseJWT(token);
+                return claimsUtils.getFrom(claims);
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return null;
+
     }
 
 
@@ -749,6 +849,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @param tokenKey
      * @return
      */
+
     private User parseByTokenKey(String tokenKey) {
         //拿到cookie
         String token = (String) redisUtils.get(Constants.user.KEY_TOKEN + tokenKey);

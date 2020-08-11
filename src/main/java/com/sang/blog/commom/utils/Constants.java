@@ -3,6 +3,8 @@ package com.sang.blog.commom.utils;
 import org.omg.CORBA.INTERNAL;
 
 public interface Constants {
+    String FROM_PC = "p_";
+    String FROM_MOBILE="m_";
 
     interface user {
         String ROLE_ADMIN = "role_admin";

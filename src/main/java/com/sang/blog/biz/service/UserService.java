@@ -25,7 +25,7 @@ public interface UserService extends IService<User> {
 
     Result register(User user, String emailCode, String captchaCode, String captchaKey, HttpServletRequest request);
 
-    Result doLogin(String captcha_key, String captcha, User user, HttpServletRequest request, HttpServletResponse response);
+    Result doLogin(String captcha_key, String captcha, User user, HttpServletRequest request, HttpServletResponse response, String from);
 
     User checkUser(HttpServletRequest request, HttpServletResponse response);
 

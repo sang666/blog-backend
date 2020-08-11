@@ -37,6 +37,8 @@ public class RefreshToken implements Serializable {
 
     private String userId;
 
+    private String mobileTokenKey;
+
     private String tokenKey;
 
 

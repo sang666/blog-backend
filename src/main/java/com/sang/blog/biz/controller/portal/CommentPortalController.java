@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/protal/comment")
-public class CommentPortal {
+public class CommentPortalController {
     @Autowired
     private CommentService commentService;
 

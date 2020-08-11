@@ -275,8 +275,9 @@ public class UserController {
                         @PathVariable("captcha") String captcha,
                         @RequestBody User user,
                         HttpServletRequest request,
-                        HttpServletResponse response) {
-        return userService.doLogin(captcha_key, captcha, user, request, response);
+                        HttpServletResponse response,
+                        @RequestParam String from) {
+        return userService.doLogin(captcha_key, captcha, user, request, response,from);
     }
 
 
