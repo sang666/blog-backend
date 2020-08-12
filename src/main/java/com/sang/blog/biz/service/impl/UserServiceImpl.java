@@ -18,6 +18,7 @@ import com.wf.captcha.GifCaptcha;
 import com.wf.captcha.SpecCaptcha;
 import com.wf.captcha.base.Captcha;
 import io.jsonwebtoken.Claims;
+import joptsimple.internal.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.get.GetRequest;
@@ -32,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -735,6 +737,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //删除cookies里的token_key
         CookieUtils.deleteCookie(response, COOKIE_TOKEN_KEY);
         return Result.ok().message("退出登陆成功");
+    }
+
+
+    /**
+     * todo:二维码登陆未做
+     *
+     * @return
+     */
+    @Override
+    public Result getPcLoginQrCodeInfo() {
+
+        long code = snowflakeIdWorker.nextId();
+        //保存到redis里
+        redisUtils.set(Constants.user.KEY_PC_LOGIN_ID+code,
+                Constants.user.KEY_PC_LOGIN_STATE_FALSE,
+                Constants.TimeValue.MIN*5);
+        Map<String,Object> result = new HashMap<>();
+        result.put("code",code);
+        result.put("url","/protal/image/qr-code/"+code);
+        //返回结果
+
+        return Result.ok().message("获取成功").data("result",result);
     }
 
 

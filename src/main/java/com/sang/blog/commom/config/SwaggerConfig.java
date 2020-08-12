@@ -39,7 +39,7 @@ public class SwaggerConfig {
                 .title("API文档")
                 .description("本文档描述了接口定义")
                 .version("1.0")
-                .contact(new Contact("sang666", "http://sang66.icu:8014", "2838441929@qq.com"))
+                .contact(new Contact("sang666", "", "2838441929@qq.com"))
                 .build();
     }
 

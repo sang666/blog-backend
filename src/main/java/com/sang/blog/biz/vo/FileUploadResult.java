@@ -3,9 +3,9 @@ package com.sang.blog.biz.vo;
 import lombok.Data;
 
 /**
- * @author lastwhisper
- * @desc 用于前后端交互的返回值
- * @email gaojun56@163.com
+ *
+ *
+ *
  */
 @Data
 public class FileUploadResult {

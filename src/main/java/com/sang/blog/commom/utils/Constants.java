@@ -17,7 +17,10 @@ public interface Constants {
         String KEY_EMAIL_SEND_ADDRESS = "key_email_send_address_";
         String KEY_TOKEN = "key_token_";
         String COOKIE_TOKEN_KEY = "blog_token";
-    }
+        String KEY_PC_LOGIN_ID = "key_pc_login_id_";
+        String KEY_PC_LOGIN_STATE_FALSE = "false";
+        String KEY_PC_LOGIN_STATE_TRUE = "true";
+     }
 
 
     interface settings {

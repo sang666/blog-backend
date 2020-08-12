@@ -1,0 +1,45 @@
+spring:
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 1000MB
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123456
+    #url: jdbc:mysql://localhost:3306/sob_blog_system?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=Asia/Shanghai
+
+    ##开发环境就换成服务器ip
+    url: jdbc:mysql://xxxxxxxxxxxxxxxxxx:3306/sob_blog_system?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=Asia/Shanghai
+
+
+
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+  redis:
+    host:  xxxxxxxxxxxxxxxxxx # Redis服务器地址
+    port:  6379 # Redis服务器连接端口
+    password:  xxxxxxxxxxxxxxxxxx # Redis服务器连接密码
+
+
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**Mapper.xml
+
+
+## aliyun oss
+aliyun:
+  endpoint: xxxxxxxxxxxxxxxxxx
+  urlPrefix: xxxxxxxxxxxxxxxxxx
+  accessKeyId: xxxxxxxxxxxxxxxxxx
+  accessKeySecret: xxxxxxxxxxxxxxxxxx
+  bucketName: xxxxxxxxxxxxxxxxxx
+
+
+
+
+
+

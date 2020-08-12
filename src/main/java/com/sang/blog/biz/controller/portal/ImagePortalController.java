@@ -44,4 +44,18 @@ public class ImagePortalController {
     }
 
 
+    // TODO: 2020/8/12 二维码登陆未做
+    @GetMapping("/qr-code/{code}")
+    public void getQrCodeImage(@PathVariable("code") String code){
+        //生成二维码
+        //二维码内容是什么
+        //可以是简单的一个code，也就是传进来这个
+        //如果是我们自己写的app来扫描，是识别并解析，请求对应的接口
+        //如果是第三方的扫描，可以识别但没有用，只能显示这个code，
+        // 如果是我们自己的app扫到，切割后面的内容拿到code进行解析
+        //请求对应接口
+
+    }
+
+
 }

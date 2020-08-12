@@ -49,4 +49,5 @@ public interface UserService extends IService<User> {
 
     Result logout(HttpServletRequest request, HttpServletResponse response);
 
+    Result getPcLoginQrCodeInfo();
 }

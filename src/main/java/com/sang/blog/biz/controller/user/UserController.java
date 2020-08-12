@@ -73,7 +73,6 @@ public class UserController {
                                  HttpServletResponse response,
                                  @PathVariable("userId") String id) {
         //判断当前的用户是谁，更据用户角色是否可以删除
-        //TODO：通过注解的方式来控制权限
         return userService.deleteById(request,response,id);
 
 
@@ -292,6 +291,24 @@ public class UserController {
     public Result logout(HttpServletRequest request,HttpServletResponse response){
 
         return userService.logout(request,response);
+
+    }
+
+
+    /**
+     * 获取二维码
+     * 二维码的图片路径
+     * 二维码的内容字符串
+     *
+     * @return
+     */
+    public Result getLoginQrCode(){
+       //生成一个唯一的id
+       //保存到redis里，值为flase，时间wei5分钟
+       //返回结果
+        userService.getPcLoginQrCodeInfo();
+
+        return null;
 
     }
 

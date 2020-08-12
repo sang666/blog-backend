@@ -22,9 +22,8 @@
 - element-ui
 - iview
 
-### 进度
-- 后端用户接口
-- 分类，友链接口
-- 图片上传阿里云oss，图片在数据库curd
-- 完善图片接口，完成轮播图接口
-- 未完待续。。。。。。.
+后端需要修改的
+![avatar](https://sang666.oss-cn-hangzhou.aliyuncs.com/img/O47RPJR2TWQWU[[CVXFM26E.png)
+![avatar](https://sang666.oss-cn-hangzhou.aliyuncs.com/img/LVFYR$R$N9@_6C21KUTETQ2.png)
+![avatar](https://sang666.oss-cn-hangzhou.aliyuncs.com/img/WD]9JQF)QZO7VM)%GXBX6FC.png)
+![avatar](https://sang666.oss-cn-hangzhou.aliyuncs.com/img/6TCT%0G8APXSS)J2W0O~%D5.png)

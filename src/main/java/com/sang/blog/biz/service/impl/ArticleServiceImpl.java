@@ -383,7 +383,6 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 long newCount = redisUtils.incr(Constants.Article.KEY_ARTICLE_CACHE_COUNT+id,1);
                 selectById.setViewCount(newCount);
                 //更新搜索数据库里的阅读量
-                // TODO: 2020/8/10  更新搜索数据库里的阅读量
                 articleMapper.updateById(selectById);
             }
             //直接返回
@@ -573,7 +572,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         long total = page.getTotal();//总记录数
         List<Article> records = page.getRecords();
 
-        //TODO:这个功能砍了，不想写了
+        //TODO:这个功能砍了，不想写了，补充文章的
         /*if (total<size){
             //说明数量不够，补充新文章
             Integer dxSize = size-total;
