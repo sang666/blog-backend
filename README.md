@@ -1,7 +1,8 @@
 ## san_blog
 ### 内容 
 - 顾名思义，一个博客网站，对b站阳光沙滩博客用mybatis-plus和ElasticSearch以及阿里云oss进行改写
-- [发布教程的up主(程序员拉大锯)的B站链接大家可以去关注下](https://space.bilibili.com/44272436)
+- [后端-已完成](https://github.com/sang666/ok_blog)
+- [前端管理中心-正在更新中](https://github.com/sang666/blog-vue-admin)
 
 ## 技术栈
 - 前后分离架构
