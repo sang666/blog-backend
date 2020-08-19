@@ -18,10 +18,8 @@ import com.wf.captcha.GifCaptcha;
 import com.wf.captcha.SpecCaptcha;
 import com.wf.captcha.base.Captcha;
 import io.jsonwebtoken.Claims;
-import joptsimple.internal.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.action.get.GetRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -34,7 +32,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -241,8 +238,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         log.info("senemail==>ip==>" + remoteaddr);
         //拿出来，如果有，哪有过了
         log.info("Constants.user.KEY_EMAIL_SEND_IP + remoteaddr===>" + Constants.user.KEY_EMAIL_SEND_IP + remoteaddr);
-        Integer ipSendTime = (Integer) redisUtils.get(Constants.user.KEY_EMAIL_SEND_IP + remoteaddr);
-        if (ipSendTime != null && ipSendTime > 10) {
+        String ipSendTimeValue = (String) redisUtils.get(Constants.user.KEY_EMAIL_SEND_IP + remoteaddr);
+        Integer ipSendTime;
+        if (ipSendTimeValue != null) {
+             ipSendTime = Integer.parseInt( (ipSendTimeValue) );
+
+        }else {
+            ipSendTime = 1;
+        }
+        if (ipSendTime > 10) {
             return Result.err().message("请不要发送的太频繁");
         }
 
@@ -275,7 +279,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         ipSendTime++;
         //一个小时有效期
-        redisUtils.set(Constants.user.KEY_EMAIL_SEND_IP + remoteaddr, ipSendTime, 60 * 60);
+        redisUtils.set(Constants.user.KEY_EMAIL_SEND_IP + remoteaddr, String.valueOf(ipSendTime), 60 * 60);
         redisUtils.set(Constants.user.KEY_EMAIL_SEND_ADDRESS + emailAddress, "true", 30);
         //保存code,10分钟内有效
         redisUtils.set(Constants.user.KEY_EMAIL_CODE_CONTENT + emailAddress, String.valueOf(code), 60 * 10);
@@ -611,10 +615,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @param response
      * @param current  当前页
      * @param limit 每页记录数
+     * @param userName
+     * @param email
      * @return
      */
     @Override
-    public Result listUserInfo(HttpServletRequest request, HttpServletResponse response, long current, long limit) {
+    public Result listUserInfo(HttpServletRequest request,
+                               HttpServletResponse response,
+                               long current, long limit,
+                               String userName, String email) {
 
 
         //可以获取用户列表
@@ -624,12 +633,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //查询部分字段，不查密码
         wrapper.select("id","user_name","roles","avatar","email",
                 "sign","state","reg_ip","login_ip","create_time","update_time");
+        if (!StringUtils.isEmpty(userName)){
+            wrapper.like("user_name",userName);
+        }
+
+        if (!StringUtils.isEmpty(email)){
+            wrapper.eq("email",email);
+        }
 
         userMapper.selectPage(page,wrapper);
-        long total = page.getTotal();//总记录数
-        List<User> records = page.getRecords();
+        //long total = page.getTotal();//总记录数
+        //List<User> records = page.getRecords();
 
-        return Result.ok().message("获取用户列表成功").data("total",total).data("rows",records);
+        return Result.ok().message("获取用户列表成功").data("rows",page);
     }
 
     /**
@@ -761,6 +777,40 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return Result.ok().message("获取成功").data("result",result);
     }
 
+    /**
+     * 登陆后返回用户信息
+     * @param request
+     * @param response
+     * @return
+     */
+    @Override
+    public Result parseToken(HttpServletRequest request, HttpServletResponse response) {
+
+        User user = checkUser(request, response);
+        if (user == null) {
+            return Result.err().message("用户未登录");
+        }
+        log.info("user---->"+user);
+
+        return Result.GET_USER_INFO().data("user",user);
+    }
+
+    @Override
+    public Result resetPassword(String userId, String password) {
+        //查询出用户
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            return Result.err().message("用户不存在");
+        }
+        user.setPassword(bCryptPasswordEncoder.encode(password));
+        userMapper.updateById(user);
+        //判断是否存在
+        //密码进行加密
+        //处理结果
+
+        return Result.ok().message("重置成功");
+    }
+
 
     /**
      * 抽取的方法
@@ -887,5 +937,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         return null;
     }
+
+    public long xx(){
+
+        long l = snowflakeIdWorker.nextId();
+        return l;
+    }
+
+    public static void main(String[] args) {
+        UserServiceImpl userService =  new UserServiceImpl();
+        userService.xx();
+    }
+
 
 }

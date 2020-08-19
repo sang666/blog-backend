@@ -56,8 +56,10 @@ public class UserController {
     public Result listUserInfo(HttpServletRequest request,
                                HttpServletResponse response,
                                @PathVariable long current,
-                               @PathVariable long limit) {
-        return userService.listUserInfo(request,response,current,limit);
+                               @PathVariable long limit,
+                               @RequestParam(value = "userName",required = false) String userName,
+                               @RequestParam(value = "email",required = false) String email) {
+        return userService.listUserInfo(request,response,current,limit,userName,email);
     }
 
 
@@ -249,7 +251,7 @@ public class UserController {
     @ApiOperation(value = "发送邮件")
     @GetMapping("/verify_code")
     public Result sendVerifycode(HttpServletRequest request,
-                                 @RequestParam String type,
+                                 @RequestParam("type") String type,
                                  @RequestParam("email") String emailAddress) {
         log.info("email==>" + emailAddress);
         return userService.sendEmail(type, request, emailAddress);
@@ -310,6 +312,31 @@ public class UserController {
 
         return null;
 
+    }
+
+    /**
+     *
+     * @param request
+     * @param response
+     * @return
+     */
+    @GetMapping("/check-token")
+    public Result parseToken(HttpServletRequest request,HttpServletResponse response){
+        return userService.parseToken(request,response);
+    }
+
+
+    /**
+     * 管理员可以重置全部密码
+     * @param userId
+     * @param password
+     * @return
+     */
+    @PreAuthorize("@permission.admin()")
+    @PutMapping("/reset-password/{userId}")
+    public Result resetPassword(@PathVariable("userId")String userId,
+                                @RequestParam("password")String password){
+        return userService.resetPassword(userId,password);
     }
 
 }

@@ -90,16 +90,15 @@ public class CategoriesController {
 
     /**
      * 管理员权限
-     * @param current
-     * @param limit
+     * @param
+     * @param
      * @return
      */
     @PreAuthorize("@permission.admin()")
-    @GetMapping("/list/{current}/{limit}")
-    public Result listCategory(@PathVariable("current") @ApiParam("当前页") long current,
-                               @PathVariable("limit")  @ApiParam("每页n条") long limit) {
+    @GetMapping("/list")
+    public Result listCategory() {
 
-        return categoriesService.listCategory(current,limit);
+        return categoriesService.listCategory();
 
     }
 

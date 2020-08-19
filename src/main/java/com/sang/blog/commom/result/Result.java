@@ -85,6 +85,14 @@ public class Result {
         return result;
     }
 
+    public static Result GET_USER_INFO() {
+        Result result = new Result();
+        result.setSuccess(true);
+        result.setCode(ResultCode.GET_USER_INFO);
+        result.setMessage("获取用户信息成功");
+        return result;
+    }
+
 
 
     public Result success(Boolean success) {

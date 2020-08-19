@@ -18,7 +18,7 @@ public interface CategoriesService extends IService<Categories> {
 
     Result getCategory(String id);
 
-    Result listCategory(long current, long limit);
+    Result listCategory();
 
     Result updateCategory(String categoryId, Categories categories);
 

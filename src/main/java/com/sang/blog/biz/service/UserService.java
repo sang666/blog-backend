@@ -41,7 +41,7 @@ public interface UserService extends IService<User> {
 
     Result deleteById(HttpServletRequest request, HttpServletResponse response, String id);
 
-    Result listUserInfo(HttpServletRequest request, HttpServletResponse response, long current, long limit);
+    Result listUserInfo(HttpServletRequest request, HttpServletResponse response, long current, long limit, String userName, String email);
 
     Result updatePassword(String verifyCode, User user);
 
@@ -50,4 +50,8 @@ public interface UserService extends IService<User> {
     Result logout(HttpServletRequest request, HttpServletResponse response);
 
     Result getPcLoginQrCodeInfo();
+
+    Result parseToken(HttpServletRequest request, HttpServletResponse response);
+
+    Result resetPassword(String userId, String password);
 }

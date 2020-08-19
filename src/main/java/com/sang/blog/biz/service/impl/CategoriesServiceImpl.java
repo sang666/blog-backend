@@ -74,18 +74,15 @@ public class CategoriesServiceImpl extends ServiceImpl<CategoriesMapper, Categor
 
     /**
      * 获取分类列表
-     * @param current
-     * @param limit
      * @return
      */
     @Override
-    public Result listCategory(long current, long limit) {
-        Page<Categories> page = new Page<>(current,limit);
-        categoriesMapper.selectPage(page,null);
-        long total = page.getTotal();//总记录数
-        List<Categories> records = page.getRecords();
+    public Result listCategory() {
+
+        List<Categories> categories = categoriesMapper.selectList(null);
+
         //进行查询
-        return Result.ok().message("获取分类列表成功").data("total",total).data("rows",records);
+        return Result.ok().message("获取分类列表成功").data("categories",categories);
     }
 
     /**

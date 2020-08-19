@@ -36,7 +36,7 @@ public class WebSiteInfoPortalController {
     public Result getCategories(@PathVariable("current") long current,
                                 @PathVariable("limit") long limit) {
 
-        return categoriesService.listCategory(current,limit);
+        return categoriesService.listCategory();
     }
 
     /**
