@@ -1,11 +1,13 @@
 package com.sang.blog.biz.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sang.blog.biz.entity.Images;
 import com.sang.blog.biz.mapper.ImagesMapper;
 import com.sang.blog.biz.service.ImagesService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sang.blog.commom.result.Result;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,16 +67,19 @@ public class ImagesServiceImpl extends ServiceImpl<ImagesMapper, Images> impleme
      * 获取图片列表
      * @param current
      * @param limit
+     * @param original
      * @return
      */
     @Override
-    public Result listImage(long current, long limit) {
+    public Result listImage(long current, long limit, String original) {
 
         Page<Images> page = new Page<>(current,limit);
-        imagesMapper.selectPage(page,null);
-        long total = page.getTotal();//总记录数
-        List<Images> records = page.getRecords();
+        QueryWrapper<Images> wrapper = new QueryWrapper<>();
+        if (!StringUtils.isEmpty(original)) {
+            wrapper.eq("original",original);
+        }
+        imagesMapper.selectPage(page,wrapper);
         //进行查询
-        return Result.ok().message("获取分类列表成功").data("total",total).data("rows",records);
+        return Result.ok().message("获取图片列表成功").data("page",page);
     }
 }

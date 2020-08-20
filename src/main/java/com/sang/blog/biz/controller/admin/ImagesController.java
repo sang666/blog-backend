@@ -59,9 +59,11 @@ public class ImagesController {
      */
     @GetMapping("/list/{current}/{limit}")
     @PreAuthorize("@permission.admin()")
-    public Result listImage(@PathVariable("current") long current, @PathVariable("limit") long limit) {
+    public Result listImage(@PathVariable("current") long current,
+                            @PathVariable("limit") long limit,
+                            @RequestParam(value = "original",required = false)String original) {
 
-        return imagesService.listImage(current,limit);
+        return imagesService.listImage(current,limit,original);
     }
 
 
@@ -73,10 +75,11 @@ public class ImagesController {
      * @Param uploadFile
      */
     @PreAuthorize("@permission.admin()")
-    @PostMapping("/upload")
-    public FileUploadResult upload(@RequestParam("file") MultipartFile uploadFile)
+    @PostMapping("/upload/{original}")
+    public Result upload(@RequestParam("file") MultipartFile uploadFile,
+                         @PathVariable("original")String original)
             throws Exception {
-        return this.fileUploadService.upload(uploadFile);
+        return this.fileUploadService.upload(uploadFile,original);
     }
 
 }

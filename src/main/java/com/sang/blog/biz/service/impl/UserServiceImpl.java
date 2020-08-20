@@ -551,16 +551,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.err().message("无权修改");
         }
         //用户名
-        if (!StringUtils.isEmpty(user.getUserName())) {
-            User selectByUserName = userMapper.selectByUserName(user.getUserName());
+        String userName = user.getUserName();
+        if (!StringUtils.isEmpty(userName)&&!userName.equals(userFromTokenKey.getUserName())) {
+            User selectByUserName = userMapper.selectByUserName(userName);
             if (selectByUserName != null) {
                 return Result.err().message("该用户名已注册");
             }
             userFromDB.setUserName(user.getUserName());
         }
         //可以进行修改
-        if (!StringUtils.isEmpty(user.getEmail())) {
-            userFromDB.setEmail(user.getEmail());
+        if (!StringUtils.isEmpty(user.getAvatar())) {
+            userFromDB.setAvatar(user.getAvatar());
         }
         //签名可以为空
         userFromDB.setSign(user.getSign());
@@ -569,7 +570,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         //干掉redis里的token，下一次请求，需要解析token的，就会根据refreshToken重新创建一个
         String tokenKey = CookieUtils.getCookie(request, COOKIE_TOKEN_KEY);
-        redisUtils.del(tokenKey);
+        redisUtils.del(Constants.user.KEY_TOKEN+tokenKey);
         return Result.ok().message("用户信息修改成功");
     }
 

@@ -15,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 
-@Document(indexName = "sang",type = "article")
+@Document(indexName = "blog",type = "article")
 public class ArticleSearch {
 
     @Id

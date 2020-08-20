@@ -18,5 +18,5 @@ public interface ImagesService extends IService<Images> {
 
     Result deleteImage(String imageId);
 
-    Result listImage(long current, long limit);
+    Result listImage(long current, long limit, String original);
 }

@@ -60,5 +60,8 @@ public class Images implements Serializable {
     @ApiModelProperty(value = "图片原名")
     private String name;
 
+    @ApiModelProperty(value = "来源")
+    private String original;
+
 
 }

@@ -2,6 +2,7 @@ package com.sang.blog;
 
 
 import com.google.gson.Gson;
+import com.sang.blog.commom.utils.CookieUtils;
 import com.sang.blog.commom.utils.RedisUtils;
 import com.sang.blog.commom.utils.SnowflakeIdWorker;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +43,12 @@ public class BlogApplication {
     public Random createRandom() {
 
         return new Random();
+    }
+
+    @Bean
+    public CookieUtils cookieUtils(){
+
+        return new CookieUtils();
     }
 
     /*@Bean

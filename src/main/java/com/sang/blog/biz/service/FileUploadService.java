@@ -9,6 +9,7 @@ import com.sang.blog.biz.mapper.ImagesMapper;
 import com.sang.blog.biz.service.impl.UserServiceImpl;
 import com.sang.blog.biz.vo.FileUploadResult;
 import com.sang.blog.commom.config.AliyunConfig;
+import com.sang.blog.commom.result.Result;
 import com.sang.blog.commom.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
@@ -56,7 +57,7 @@ public class FileUploadService {
      * 文档链接 https://help.aliyun.com/document_detail/84781.html?spm=a2c4g.11186623.6.749.11987a7dRYVSzn
      * @email 2838441929@qq.com
      */
-    public FileUploadResult upload(MultipartFile uploadFile) {
+    public /*FileUploadResult*/Result upload(MultipartFile uploadFile, String original) {
 
         ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = requestAttributes.getRequest();
@@ -72,10 +73,11 @@ public class FileUploadService {
             }
         }
         //封装Result对象，并且将文件的byte数组放置到result对象中
-        FileUploadResult fileUploadResult = new FileUploadResult();
+        //FileUploadResult fileUploadResult = new FileUploadResult();
         if (!isLegal) {
-            fileUploadResult.setStatus("error");
-            return fileUploadResult;
+
+            //fileUploadResult.setStatus("error");
+            return Result.err().message("上传失败");
         }
         //文件新路径
         String fileName = uploadFile.getOriginalFilename();
@@ -92,13 +94,14 @@ public class FileUploadService {
         } catch (Exception e) {
             e.printStackTrace();
             //上传失败
-            fileUploadResult.setStatus("error");
-            return fileUploadResult;
+            //fileUploadResult.setStatus("error");
+            return Result.err().message("上传失败");
         }
+        FileUploadResult fileUploadResult = new FileUploadResult();
         fileUploadResult.setStatus("done");
         fileUploadResult.setResponse("success");
         //this.aliyunConfig.getUrlPrefix() + filePath 文件路径需要保存到数据库
-        fileUploadResult.setName(this.aliyunConfig.getUrlPrefix() + filePath);
+        fileUploadResult.setName(this.aliyunConfig.getUrlPrefix() +"/"+ filePath);
         fileUploadResult.setUid(String.valueOf(System.currentTimeMillis()));
 
 
@@ -109,11 +112,12 @@ public class FileUploadService {
             images.setUserId(checkUser.getId());
             images.setUrl("https://"+this.aliyunConfig.getUrlPrefix() +"/"+ filePath);
             images.setName(substringBefore);
+            images.setOriginal(original);
         }
         //url存到数据库
         imagesMapper.insert(images);
 
-        return fileUploadResult;
+        return Result.ok().message("上传成功").data("result",fileUploadResult);
     }
 
     /**

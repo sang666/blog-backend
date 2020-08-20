@@ -28,17 +28,36 @@ import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.util.ast.Node;
 import com.vladsch.flexmark.util.data.MutableDataSet;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 
+import org.apache.lucene.util.QueryBuilder;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -48,6 +67,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 
+import java.io.IOException;
 import java.util.*;
 
 import static com.sang.blog.commom.utils.Constants.Article.SUMMARY_MAX_LENGTH;
@@ -87,6 +107,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     private Gson gson;
     @Autowired
     private CommentMapper commentMapper;
+
+    @Autowired
+    private RestHighLevelClient restHighLevelClient;
 
 
 
@@ -645,18 +668,18 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
      * @param keyword
      * @return
      */
+
+    @SneakyThrows
     @Override
     public Result searchByContent(Integer page, Integer size, String keyword) {
 
-        // 定义高亮字段
-        //HighlightBuilder.Field titleField = new HighlightBuilder.Field("title").preTags("<span>").postTags("</span>");
-        //HighlightBuilder.Field contentField = new HighlightBuilder.Field("content").preTags("<span>").postTags("</span>");
+
 
         if (keyword == null) {
             return Result.err().message("关键字不能为空");
         }
 
-        // TODO: 2020/8/9 剩个高亮没整
+        /*// TODO: 2020/8/9 剩个高亮没整
         // 构建查询内容
         QueryStringQueryBuilder queryBuilder = new QueryStringQueryBuilder(keyword);
         // 查询的字段
@@ -664,13 +687,47 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         queryBuilder.field("title").field("content").field("labels");
 
         Iterable<ArticleSearch> searchResult = articleSearchDao.search(queryBuilder,pageable);
-        /*Iterator<ArticleSearch> iterator = searchResult.iterator();
+        Iterator<ArticleSearch> iterator = searchResult.iterator();
         List<ArticleSearch> list = new ArrayList<ArticleSearch>();
         while (iterator.hasNext()) {
             list.add(iterator.next());
         }*/
 
-        return Result.ok().data("list",searchResult).message("搜索成功");
+        // TODO: 2020/8/20
+
+
+        SearchRequest searchRequest = new SearchRequest("blog");
+        List<ArticleSearch>list = new ArrayList<>();
+
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.matchQuery("content",keyword)).from(page).size(size)
+                .highlighter(new HighlightBuilder()
+                        .field("*")
+                        .requireFieldMatch(false).preTags("<span style='color:red'>").postTags("</span>"));
+
+        searchRequest.types("article").source(searchSourceBuilder);
+
+        SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+        SearchHit[] hits = searchResponse.getHits().getHits();
+        for (SearchHit hit : hits) {
+            Map<String, Object> sourceAsMap = hit.getSourceAsMap();
+            ArticleSearch articleSearch = new ArticleSearch();
+            articleSearch.setId(hit.getId());
+            articleSearch.setCategoryId(sourceAsMap.get("categoryId").toString());
+            articleSearch.setLabels(sourceAsMap.get("labels").toString());
+            articleSearch.setContent(sourceAsMap.get("content").toString());
+            articleSearch.setSummary(sourceAsMap.get("summary").toString());
+            articleSearch.setTitle(sourceAsMap.get("title").toString());
+            Map<String, HighlightField> highlightFields = hit.getHighlightFields();
+            if (highlightFields.containsKey("content")){
+                articleSearch.setContent(highlightFields.get("content").fragments()[0].toString());
+            }
+            list.add(articleSearch);
+        }
+        long totalHits = searchResponse.getHits().getTotalHits();
+        //根据一个值查询多个字段  并高亮显示  这里的查询是取并集，即多个字段只需要有一个字段满足即可
+        //需要查询的字段
+        return Result.ok().data("list",list).message("搜索成功").data("total",totalHits);
 
     }
 
