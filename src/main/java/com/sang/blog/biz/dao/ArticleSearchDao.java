@@ -11,6 +11,8 @@ public interface ArticleSearchDao extends ElasticsearchRepository<ArticleSearch,
 
     ArticleSearch queryArticleSearchById(String id);
 
+    int deleteArticleSearchById(String id);
+
 
 
 

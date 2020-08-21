@@ -9,9 +9,7 @@ spring:
     username: root
     password: 123456
     #url: jdbc:mysql://localhost:3306/sob_blog_system?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=Asia/Shanghai
-
-    ##开发环境就换成服务器ip
-    url: jdbc:mysql://xxxxxxxxxxxxxxxxxx:3306/sob_blog_system?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://39.99.236.52:3306/sob_blog_system?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=Asia/Shanghai
 
 
 
@@ -20,9 +18,9 @@ spring:
     time-zone: GMT+8
 
   redis:
-    host:  xxxxxxxxxxxxxxxxxx # Redis服务器地址
+    host:  39.99.236.52 # Redis服务器地址
     port:  6379 # Redis服务器连接端口
-    password:  xxxxxxxxxxxxxxxxxx # Redis服务器连接密码
+    password:  123456 # Redis服务器连接密码
 
 
 
@@ -31,12 +29,13 @@ mybatis-plus:
 
 
 ## aliyun oss
+## 配置说明参考: com.ljq.demo.springboot.common.config.OSSConfig.class
 aliyun:
-  endpoint: xxxxxxxxxxxxxxxxxx
-  urlPrefix: xxxxxxxxxxxxxxxxxx
-  accessKeyId: xxxxxxxxxxxxxxxxxx
-  accessKeySecret: xxxxxxxxxxxxxxxxxx
-  bucketName: xxxxxxxxxxxxxxxxxx
+  endpoint: oss-cn-hangzhou.aliyuncs.com
+  urlPrefix: sang666.oss-cn-hangzhou.aliyuncs.com
+  accessKeyId: LTAI4GD2fkynXAfyyQnqC8f9
+  accessKeySecret: muMLVYsfwtmtFV4MMLYq7kOYvf4id9
+  bucketName: sang666
 
 
 

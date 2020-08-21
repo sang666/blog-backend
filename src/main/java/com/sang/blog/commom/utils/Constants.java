@@ -68,7 +68,7 @@ public interface Constants {
         int TITLE_MAX_LENGTH = 128;
         int SUMMARY_MAX_LENGTH = 128;
 
-        //状态（0表示删除，1表示发布，2表示草稿,3表示置顶）
+        //状态（1表示删除，0表示发布，2表示草稿,3表示置顶）
         Integer STATE_DELETE = 1;
         Integer STATE_PUBLISH = 0;
         Integer STATE_DRAFT = 2;

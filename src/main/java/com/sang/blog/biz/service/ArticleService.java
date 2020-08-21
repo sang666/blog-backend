@@ -39,4 +39,8 @@ public interface ArticleService extends IService<Article> {
     Result getArticleByIdNoContent(String id);
 
     Result searchByContent(Integer page, Integer size, String keyword);
+
+    Result listArticleNoCache(long current, long limit, Integer state,
+                              String name, String categoryId, String begin,
+                              String end, String labels, String labelsLike);
 }

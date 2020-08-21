@@ -309,6 +309,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         String end = articleQuery.getEnd();*/
         //spring包中的stringUtils工具类
 
+        wrapper.select("id","title","user_id","category_id","type","cover",
+                "state","summary","labels","view_count","create_time","update_time");
+
         //判断条件是否为空，如果为空就拼接条件
         if (!StringUtils.isEmpty(name)){
             wrapper.like("title",name);
@@ -326,7 +329,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             wrapper.le("update_time",end);
         }
 
-        if (!StringUtils.isEmpty(String.valueOf(state))){
+        if (!(state ==null)){
             wrapper.eq("state",state);
         }
 
@@ -337,23 +340,21 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         if (!StringUtils.isEmpty(labelsLike)){
             wrapper.like("labels",labelsLike);
         }
-
         //排序
         wrapper.orderByDesc("update_time");
-        wrapper.select("id","title","user_id","category_id","type","cover",
-                "state","summary","labels","view_count","create_time","update_time");
 
 
-        IPage<Article> articleIPage = articleMapper.selectPage(page, wrapper);
+
+        articleMapper.selectPage(page, wrapper);
         //long total = page.getTotal();//总记录数
         //List<Article> records = page.getRecords();//
         //保存到redis
         //List<Article> records = articleIPage.getRecords();
         if (current==1) {
-            redisUtils.set(Constants.Article.KEY_ARTICLE_LIST_FIRST_PAGE,gson.toJson(articleIPage),Constants.TimeValue.MIN*15);
+            redisUtils.set(Constants.Article.KEY_ARTICLE_LIST_FIRST_PAGE,gson.toJson(page),Constants.TimeValue.MIN*15);
         }
 
-        return Result.ok().data("rows",articleIPage);
+        return Result.ok().data("rows",page);
     }
 
     /**
@@ -493,7 +494,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         if (result>0) {
             redisUtils.del(Constants.Article.KEY_ARTICLE_CACHE+id);
             redisUtils.del(Constants.Article.KEY_ARTICLE_LIST_FIRST_PAGE);
-            articleSearchDao.deleteById(id);
+
+            articleSearchDao.deleteArticleSearchById(id);
             commentMapper.deleteById(id);
 
 
@@ -513,7 +515,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
         int result = articleMapper.deleteByState(articleId);
         if (result>0) {
-            articleSearchDao.deleteById(articleId);
+            articleSearchDao.deleteArticleSearchById(articleId);
+
             return Result.ok().message("文章删除成功");
 
         }
@@ -727,8 +730,69 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         long totalHits = searchResponse.getHits().getTotalHits();
         //根据一个值查询多个字段  并高亮显示  这里的查询是取并集，即多个字段只需要有一个字段满足即可
         //需要查询的字段
+
         return Result.ok().data("list",list).message("搜索成功").data("total",totalHits);
 
+    }
+
+    @Override
+    public Result listArticleNoCache(long current, long limit, Integer state, String name, String categoryId, String begin, String end, String labels, String labelsLike) {
+
+        //创建page对象
+        Page<Article> page = new Page<>(current,limit);
+
+        //构建条件
+        QueryWrapper<Article> wrapper = new QueryWrapper<>();
+
+        /*String name = articleQuery.getName();
+        String categoryId = articleQuery.getCategoryId();
+        String begin = articleQuery.getBegin();
+        String end = articleQuery.getEnd();*/
+        //spring包中的stringUtils工具类
+
+        wrapper.select("id","title","user_id","category_id","type","cover",
+                "state","summary","labels","view_count","create_time","update_time");
+
+        //判断条件是否为空，如果为空就拼接条件
+        if (!StringUtils.isEmpty(name)){
+            wrapper.like("title",name);
+        }
+
+        if (!StringUtils.isEmpty(categoryId)){
+            wrapper.eq("category_id",categoryId);
+        }
+
+        if (!StringUtils.isEmpty(begin)){
+            wrapper.ge("update_time",begin);
+        }
+
+        if (!StringUtils.isEmpty(end)){
+            wrapper.le("update_time",end);
+        }
+
+        if (!(state ==null)){
+            wrapper.eq("state",state);
+        }
+
+        if (!StringUtils.isEmpty(labels)){
+            wrapper.like("labels",labels);
+        }
+
+        if (!StringUtils.isEmpty(labelsLike)){
+            wrapper.like("labels",labelsLike);
+        }
+        //排序
+        wrapper.orderByDesc("update_time");
+
+
+
+        articleMapper.selectPage(page, wrapper);
+        //long total = page.getTotal();//总记录数
+        //List<Article> records = page.getRecords();//
+        //保存到redis
+        //List<Article> records = articleIPage.getRecords();
+
+        return Result.ok().data("rows",page);
     }
 
 

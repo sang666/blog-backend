@@ -116,8 +116,10 @@ public class ArticleController {
                               Integer state,
                               String name,String categoryId,String begin,String end,String labels) {
 
-        return articleService.listArticle(current,limit,state,name,categoryId,begin,end,labels,null);
+        return articleService.listArticleNoCache(current,limit,state,name,categoryId,begin,end,labels,null);
     }
+
+
 
 
     /**

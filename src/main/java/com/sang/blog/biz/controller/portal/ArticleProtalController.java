@@ -44,7 +44,7 @@ public class ArticleProtalController {
                                         @PathVariable long current,
                                         @PathVariable long limit) {
 
-        return articleService.listArticle(current,limit,
+        return articleService.listArticleNoCache(current,limit,
                 Constants.Article.STATE_PUBLISH,null,categoryId,null,null,null,null);
     }
 
@@ -58,7 +58,7 @@ public class ArticleProtalController {
     public Result getTopArticle(@PathVariable long current,
                                 @PathVariable long limit){
 
-        return articleService.listArticle(current,limit,
+        return articleService.listArticleNoCache(current,limit,
                 Constants.Article.STATE_TOP,null,null,null,null,null,null);
     }
 
