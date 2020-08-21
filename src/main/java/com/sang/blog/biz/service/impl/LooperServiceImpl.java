@@ -26,6 +26,7 @@ import java.util.List;
 public class LooperServiceImpl extends ServiceImpl<LooperMapper, Looper> implements LooperService {
 
 
+
     @Autowired
     private LooperMapper looperMapper;
 

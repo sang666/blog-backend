@@ -17,4 +17,5 @@ import org.springframework.stereotype.Service;
 @Service
 public class DailyViewCountServiceImpl extends ServiceImpl<DailyViewCountMapper, DailyViewCount> implements DailyViewCountService {
 
+
 }

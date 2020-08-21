@@ -44,6 +44,7 @@ public class ArticleProtalController {
                                         @PathVariable long current,
                                         @PathVariable long limit) {
 
+
         return articleService.listArticleNoCache(current,limit,
                 Constants.Article.STATE_PUBLISH,null,categoryId,null,null,null,null);
     }

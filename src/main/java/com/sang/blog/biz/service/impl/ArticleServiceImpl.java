@@ -745,6 +745,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         QueryWrapper<Article> wrapper = new QueryWrapper<>();
 
         /*String name = articleQuery.getName();
+
         String categoryId = articleQuery.getCategoryId();
         String begin = articleQuery.getBegin();
         String end = articleQuery.getEnd();*/

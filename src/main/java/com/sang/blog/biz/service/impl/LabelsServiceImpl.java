@@ -17,4 +17,5 @@ import org.springframework.stereotype.Service;
 @Service
 public class LabelsServiceImpl extends ServiceImpl<LabelsMapper, Labels> implements LabelsService {
 
+
 }

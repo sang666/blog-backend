@@ -26,6 +26,7 @@ import java.util.List;
 @Transactional
 public class CategoriesServiceImpl extends ServiceImpl<CategoriesMapper, Categories> implements CategoriesService {
 
+
     @Autowired
     private CategoriesMapper categoriesMapper;
 

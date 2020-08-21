@@ -24,6 +24,7 @@ import java.util.List;
 @Transactional
 public class FriendsServiceImpl extends ServiceImpl<FriendsMapper, Friends> implements FriendsService {
 
+
     @Autowired
     private FriendsMapper friendsMapper;
     /**

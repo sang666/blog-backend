@@ -117,6 +117,7 @@ public class FileUploadService {
         //url存到数据库
         imagesMapper.insert(images);
 
+
         return Result.ok().message("上传成功").data("result",fileUploadResult);
     }
 

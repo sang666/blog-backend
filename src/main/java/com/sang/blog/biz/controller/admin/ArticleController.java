@@ -109,6 +109,7 @@ public class ArticleController {
      * @param limit
      * @return
      */
+
     @PostMapping("/list/{current}/{limit}")
     @PreAuthorize("@permission.admin()")
     public Result listArticle(@PathVariable("current") long current,
