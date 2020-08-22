@@ -220,11 +220,60 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         }else {
             //更新内容
             Article articleFromDb = articleMapper.selectById(articleId);
-            if (Constants.Article.STATE_PUBLISH.equals(articleFromDb.getState()) && Constants.Article.STATE_DRAFT.equals(state)) {
+            if (Constants.Article.STATE_PUBLISH.equals(articleFromDb.getState())) {
                 //已经发布了，只能更新，不能保存为草稿
                 return Result.err().message("已经发布的文章不支持保存草稿");
+            }else if (Constants.Article.STATE_DRAFT.equals(articleFromDb.getState())){
+                //补充数据
+                article.setUserId(user.getId());
+                article.setAvatar(user.getAvatar());
+                article.setUserName(user.getUserName());
+
+                //保存到数据库
+                articleMapper.updateById(article);
+                //存到es搜索库
+                if (Constants.Article.STATE_PUBLISH.equals(article.getState())||Constants.Article.STATE_DRAFT.equals(article.getState())) {
+                    ArticleSearch articleSearch = new ArticleSearch();
+                    articleSearch.setId(article.getId());
+                    String articleType = article.getType();
+
+                    String html;
+                    if (Constants.Article.TUPE_MARKDOWM.equals(articleType)) {
+                        //转成html
+                        MutableDataSet options = new MutableDataSet().set(Parser.EXTENSIONS,Arrays.asList(
+                                TablesExtension.create(),
+                                JekyllTagExtension.create(),
+                                TocExtension.create(),
+                                SimTocExtension.create()
+                        ));
+                        Parser parser = Parser.builder(options).build();
+                        HtmlRenderer renderer = HtmlRenderer.builder(options).build();
+                        Node document = parser.parse(article.getContent());
+                        html = renderer.render(document);
+                        //存到es数据库
+                    }else {
+                        html = article.getContent();
+                    }
+
+                    //到这里原来不管是什么都是html
+                    String content = Jsoup.parse(html).text();
+                    articleSearch.setContent(content);
+                    articleSearch.setSummary(article.getSummary());
+                    articleSearch.setTitle(article.getTitle());
+                    articleSearch.setCategoryId(article.getCategoryId());
+                    articleSearch.setLabels(article.getLabels());
+                    articleSearchDao.save(articleSearch);
+                }
+
+                //打散标签，存到数据库
+                this.setupLabels(article.getLabels());
+                // 添加文章后删除redis里的缓存
+                redisUtils.del(Constants.Article.KEY_ARTICLE_LIST_FIRST_PAGE);
+                return Result.ok().message("草稿已经存为草稿，给爷爪巴");
             }
+
         }
+
 
         //补充数据
         article.setUserId(user.getId());
@@ -233,7 +282,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //保存到数据库
         articleMapper.insert(article);
         //存到es搜索库
-        if (Constants.Article.STATE_PUBLISH.equals(article.getState())) {
+        if (Constants.Article.STATE_PUBLISH.equals(article.getState())||Constants.Article.STATE_DRAFT.equals(article.getState())) {
             ArticleSearch articleSearch = new ArticleSearch();
             articleSearch.setId(article.getId());
             String articleType = article.getType();
@@ -438,11 +487,16 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         if (selectById == null) {
             return Result.err().message("文章不存在");
         }
+
         ArticleSearch articleSearch = articleSearchDao.queryArticleSearchById(selectById.getId());
+        if (articleSearch == null) {
+            return Result.err().message("给爷爬，删除了的还想恢复");
+        }
         String title = article.getTitle();
         if (!StringUtils.isEmpty(article.getTitle())) {
             selectById.setTitle(title);
             articleSearch.setTitle(title);
+
         }
 
         String summary = article.getSummary();
@@ -469,9 +523,19 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             articleSearch.setCategoryId(categoryId);
         }
 
+        String cover = article.getCover();
+        if (!StringUtils.isEmpty(cover)) {
+            selectById.setCover(article.getCover());
+
+        }
+
+        selectById.setState(article.getState());
+
+
         articleMapper.updateById(selectById);
         //存到es搜索
         articleSearchDao.save(articleSearch);
+        redisUtils.del(Constants.Article.KEY_ARTICLE_CACHE + id);
 
         //修改
         //返回结果
@@ -549,11 +613,17 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
             article.setState(Constants.Article.STATE_TOP);
             articleMapper.updateById(article);
+            redisUtils.del(Constants.Article.KEY_ARTICLE_LIST_FIRST_PAGE);
+
             return Result.ok().message("文章置顶成功");
         }if (Constants.Article.STATE_TOP.equals(state)){
             article.setState(Constants.Article.STATE_PUBLISH);
             articleMapper.updateById(article);
+            redisUtils.del(Constants.Article.KEY_ARTICLE_LIST_FIRST_PAGE);
+
             return Result.ok().message("已取消置顶");
+        }if (Constants.Article.STATE_DRAFT.equals(state)){
+            return Result.err().message("草稿不能置顶");
         }
         return Result.err().message("不支持该操作");
 
