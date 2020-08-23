@@ -84,4 +84,13 @@ public class WebSiteInfoController {
 
         return webSiteInfoService.getWebSiteCount();
     }
+
+
+    @GetMapping("/register_count")
+    public Result getRegisterCount(){
+
+        return webSiteInfoService.getRegisterCount();
+    }
+
+
 }

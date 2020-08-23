@@ -81,7 +81,7 @@ public interface Constants {
     }
 
     interface Comment{
-        //状态（0表示删除，1表示发布，2表示草稿,3表示置顶）
+        //状态（1表示删除，0表示发布,3表示置顶）
         Integer STATE_PUBLISH = 0;
         Integer STATE_TOP = 3;
         String KEY_COMMENT_FIRST_PAGE_CACHE="key_comment_first_page_cache_";

@@ -43,4 +43,7 @@ public interface ArticleService extends IService<Article> {
     Result listArticleNoCache(long current, long limit, Integer state,
                               String name, String categoryId, String begin,
                               String end, String labels, String labelsLike);
+
+    Result getTotalCount();
+
 }

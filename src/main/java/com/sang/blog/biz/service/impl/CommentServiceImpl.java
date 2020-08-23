@@ -162,10 +162,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         QueryWrapper<Comment> wrapper = new QueryWrapper<>();
         wrapper.orderByDesc("create_time");
         commentMapper.selectPage(page,wrapper);
-        long total = page.getTotal();
-        List<Comment> records = page.getRecords();
 
-        return Result.ok().message("管理员获取评论列表成功").data("total",total).data("rows",records);
+
+        return Result.ok().message("管理员获取评论列表成功").data("page",page);
     }
 
     /**
@@ -193,5 +192,17 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
 
 
+    }
+
+    /**
+     * 评论总数
+     * @return
+     */
+    @Override
+    public Result getComment() {
+
+        long count = commentMapper.selectCount(null);
+
+        return Result.ok().data("count",count).message("评论总数获取成功");
     }
 }

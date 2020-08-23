@@ -26,4 +26,7 @@ public interface CommentService extends IService<Comment> {
     Result listComment(long current, long limit);
 
     Result topComment(String id);
+
+    Result getComment();
+
 }

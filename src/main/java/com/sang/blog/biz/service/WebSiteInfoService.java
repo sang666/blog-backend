@@ -18,4 +18,6 @@ public interface WebSiteInfoService {
 
     void updateViewCount();
 
+    Result getRegisterCount();
+
 }

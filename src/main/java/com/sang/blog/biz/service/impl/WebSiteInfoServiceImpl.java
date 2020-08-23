@@ -3,6 +3,7 @@ package com.sang.blog.biz.service.impl;
 
 import com.sang.blog.biz.entity.Settings;
 import com.sang.blog.biz.mapper.SettingsMapper;
+import com.sang.blog.biz.mapper.UserMapper;
 import com.sang.blog.biz.service.WebSiteInfoService;
 import com.sang.blog.commom.result.Result;
 import com.sang.blog.commom.utils.Constants;
@@ -27,6 +28,9 @@ public class WebSiteInfoServiceImpl implements WebSiteInfoService {
 
     @Autowired
     private RedisUtils redisUtils;
+
+    @Autowired
+    private UserMapper userMapper;
 
     /**
      * 获取网站title
@@ -180,5 +184,18 @@ public class WebSiteInfoServiceImpl implements WebSiteInfoService {
         }
         //数字自增
         redisUtils.incr(Constants.settings.WEB_SITE_VIEW_COUNT,1);
+    }
+
+
+    /**
+     * 注册总人数
+     * @return
+     */
+    @Override
+    public Result getRegisterCount() {
+
+        long count = userMapper.selectCount(null);
+
+        return Result.ok().message("注册人数获取成功").data("count",count);
     }
 }

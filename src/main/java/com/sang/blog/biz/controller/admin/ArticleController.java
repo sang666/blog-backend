@@ -154,36 +154,37 @@ public class ArticleController {
     public Result addArticle(){
         List<Article> articleList = articleService.list(null);
         for (Article article : articleList) {
-
-
-            String articleType = article.getType();
-            String html;
-            if (Constants.Article.TUPE_MARKDOWM.equals(articleType)) {
-                //转成html
-                MutableDataSet options = new MutableDataSet().set(Parser.EXTENSIONS, Arrays.asList(
-                        TablesExtension.create(),
-                        JekyllTagExtension.create(),
-                        TocExtension.create(),
-                        SimTocExtension.create()
-                ));
-                Parser parser = Parser.builder(options).build();
-                HtmlRenderer renderer = HtmlRenderer.builder(options).build();
-                Node document = parser.parse(article.getContent());
-                html = renderer.render(document);
-                //存到es数据库
-            }else {
-                html = article.getContent();
+            Integer articleState = article.getState();
+            if (!Constants.Article.STATE_DELETE.equals(articleState)) {
+                String articleType = article.getType();
+                String html;
+                if (Constants.Article.TUPE_MARKDOWM.equals(articleType)) {
+                    //转成html
+                    MutableDataSet options = new MutableDataSet().set(Parser.EXTENSIONS, Arrays.asList(
+                            TablesExtension.create(),
+                            JekyllTagExtension.create(),
+                            TocExtension.create(),
+                            SimTocExtension.create()
+                    ));
+                    Parser parser = Parser.builder(options).build();
+                    HtmlRenderer renderer = HtmlRenderer.builder(options).build();
+                    Node document = parser.parse(article.getContent());
+                    html = renderer.render(document);
+                    //存到es数据库
+                }else {
+                    html = article.getContent();
+                }
+                String content = Jsoup.parse(html).text();
+                ArticleSearch articleSearch = new ArticleSearch();
+                articleSearch.setId(article.getId());
+                articleSearch.setContent(content);
+                articleSearch.setSummary(article.getSummary());
+                articleSearch.setTitle(article.getTitle());
+                articleSearch.setLabels(article.getLabels());
+                articleSearch.setCategoryId(article.getCategoryId());
+                //log.info(article.getLabelList().listIterator().next());
+                articleSearchDao.save(articleSearch);
             }
-            String content = Jsoup.parse(html).text();
-            ArticleSearch articleSearch = new ArticleSearch();
-            articleSearch.setId(article.getId());
-            articleSearch.setContent(content);
-            articleSearch.setSummary(article.getSummary());
-            articleSearch.setTitle(article.getTitle());
-            articleSearch.setLabels(article.getLabels());
-            articleSearch.setCategoryId(article.getCategoryId());
-            //log.info(article.getLabelList().listIterator().next());
-            articleSearchDao.save(articleSearch);
 
         }
 
@@ -199,5 +200,12 @@ public class ArticleController {
         return Result.ok().data("dd",articles);
     }
 */
+
+
+    @GetMapping("/total_count")
+    public Result getTotalCount(){
+
+        return articleService.getTotalCount();
+    }
 
 }

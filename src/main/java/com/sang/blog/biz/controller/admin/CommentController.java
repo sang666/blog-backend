@@ -84,4 +84,9 @@ public class CommentController {
 
         return commentService.topComment(id);
     }
+
+    @GetMapping("/comment_count")
+    public Result getComment(){
+        return commentService.getComment();
+    }
 }

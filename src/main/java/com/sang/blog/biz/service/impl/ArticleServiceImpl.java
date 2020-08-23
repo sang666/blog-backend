@@ -488,7 +488,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             return Result.err().message("文章不存在");
         }
 
-        ArticleSearch articleSearch = articleSearchDao.queryArticleSearchById(selectById.getId());
+        ArticleSearch articleSearch = articleSearchDao.findArticleSearchById(selectById.getId());
         if (articleSearch == null) {
             return Result.err().message("给爷爬，删除了的还想恢复");
         }
@@ -864,6 +864,18 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //List<Article> records = articleIPage.getRecords();
 
         return Result.ok().data("rows",page);
+    }
+
+    /**
+     * 文章总数
+     * @return
+     */
+    @Override
+    public Result getTotalCount() {
+
+        long count = articleMapper.selectCount(null);
+
+        return Result.ok().data("count",count).message("文章总数获取成功");
     }
 
 
