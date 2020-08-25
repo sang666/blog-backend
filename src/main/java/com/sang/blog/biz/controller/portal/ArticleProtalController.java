@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/protal/Article")
+@RequestMapping("/portal/Article")
 public class ArticleProtalController {
 
 
@@ -87,7 +87,7 @@ public class ArticleProtalController {
      * @param id
      * @return
      */
-    @GetMapping("/recommend{id}/{size}")
+    @GetMapping("/recommend/{id}/{size}")
     public Result getRecommendArticles(@PathVariable String id,@PathVariable Integer size) {
 
 

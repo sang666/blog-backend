@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/portal/search")
+@RequestMapping("/portal")
 public class SearchPorTalController {
 
 
@@ -15,8 +15,8 @@ public class SearchPorTalController {
     private ArticleService articleService;
 
 
-    @GetMapping("/{page}/{size}")
-    public Result doSearch(@PathVariable Integer page, @PathVariable Integer size, @RequestParam String keyword) {
+    @GetMapping("/search")
+    public Result doSearch(@RequestParam Integer page, @RequestParam Integer size, @RequestParam String keyword) {
         return articleService.searchByContent(page,size,keyword);
     }
 }

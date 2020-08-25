@@ -262,6 +262,10 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                     articleSearch.setTitle(article.getTitle());
                     articleSearch.setCategoryId(article.getCategoryId());
                     articleSearch.setLabels(article.getLabels());
+                    articleSearch.setCover(article.getCover());
+
+                    articleSearch.setLabelList(article.getLabelList());
+
                     articleSearchDao.save(articleSearch);
                 }
 
@@ -525,9 +529,11 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
         String cover = article.getCover();
         if (!StringUtils.isEmpty(cover)) {
-            selectById.setCover(article.getCover());
-
+            selectById.setCover(cover);
+            articleSearch.setCover(cover);
         }
+
+        articleSearch.setLabelList(article.getLabelList());
 
         selectById.setState(article.getState());
 
@@ -641,6 +647,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     public Result listRecommendArticles(String id, Integer size) {
         //查询文章，不需要文章，只需要标签
         String labels = articleMapper.listArticleLabelsById(id);
+        if (StringUtils.isEmpty(labels)) {
+            return Result.err().message("文章不存在");
+        }
         log.info("labels---->"+labels);
         //打散标签
         List<String>labelList = new ArrayList<>();
@@ -752,7 +761,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             return Result.err().message("关键字不能为空");
         }
 
-        /*// TODO: 2020/8/9 剩个高亮没整
+        /*//
         // 构建查询内容
         QueryStringQueryBuilder queryBuilder = new QueryStringQueryBuilder(keyword);
         // 查询的字段
@@ -766,14 +775,15 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             list.add(iterator.next());
         }*/
 
-        // TODO: 2020/8/20
 
-
+        Map<String, Float> fields = new HashMap<>();
+        fields.put("content", QueryStringQueryBuilder.DEFAULT_BOOST);
+        fields.put("labels", QueryStringQueryBuilder.DEFAULT_BOOST);
         SearchRequest searchRequest = new SearchRequest("blog");
         List<ArticleSearch>list = new ArrayList<>();
 
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(QueryBuilders.matchQuery("content",keyword)).from(page).size(size)
+        searchSourceBuilder.query(QueryBuilders.queryStringQuery(keyword).fields(fields)).from((page-1)*size).size(size)
                 .highlighter(new HighlightBuilder()
                         .field("*")
                         .requireFieldMatch(false).preTags("<span style='color:red'>").postTags("</span>"));
@@ -788,20 +798,59 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             articleSearch.setId(hit.getId());
             articleSearch.setCategoryId(sourceAsMap.get("categoryId").toString());
             articleSearch.setLabels(sourceAsMap.get("labels").toString());
-            articleSearch.setContent(sourceAsMap.get("content").toString());
+            String content = sourceAsMap.get("content").toString();
+            String substring = StringUtils.substring(content, 0, 250);
+            articleSearch.setContent(substring);
             articleSearch.setSummary(sourceAsMap.get("summary").toString());
             articleSearch.setTitle(sourceAsMap.get("title").toString());
+            articleSearch.setCover(sourceAsMap.get("cover").toString());
             Map<String, HighlightField> highlightFields = hit.getHighlightFields();
             if (highlightFields.containsKey("content")){
                 articleSearch.setContent(highlightFields.get("content").fragments()[0].toString());
             }
             list.add(articleSearch);
         }
-        long totalHits = searchResponse.getHits().getTotalHits();
+
+        long total = searchResponse.getHits().getTotalHits();
+        float size1 = size;
+        float totals= total;
+        float l = totals / size1;
+        long pages = (long) Math.ceil(l);
+        long current = page;
+        long nowSize = size;
         //根据一个值查询多个字段  并高亮显示  这里的查询是取并集，即多个字段只需要有一个字段满足即可
         //需要查询的字段
+        boolean first ;
+        boolean last;
 
-        return Result.ok().data("list",list).message("搜索成功").data("total",totalHits);
+        if (current == 1&&current==pages){
+            first=true;
+            last=true;
+        }else if (current==1&&current<pages){
+            first=true;
+            last=false;
+        }
+        else if (current>1&&current<pages){
+            first=false;
+            last=false;
+        }else if(current==pages){
+            first=false;
+            last=true;
+        }else {
+            first=true;
+            last=true;
+
+        }
+
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("size",nowSize);
+        map.put("pages",pages);
+        map.put("current",current);
+        map.put("total",total);
+        map.put("list",list);
+        map.put("last",last);
+        map.put("first",first);
+        return Result.ok().data("rows",map).message("搜索成功");
 
     }
 

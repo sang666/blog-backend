@@ -94,7 +94,9 @@ public class CategoriesController {
      * @param
      * @return
      */
+/*
     @PreAuthorize("@permission.admin()")
+*/
     @GetMapping("/list")
     public Result listCategory() {
 

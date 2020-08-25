@@ -1,11 +1,9 @@
 package com.sang.blog.biz.controller.portal;
 
 
-import com.sang.blog.biz.service.CategoriesService;
-import com.sang.blog.biz.service.FriendsService;
-import com.sang.blog.biz.service.LooperService;
-import com.sang.blog.biz.service.WebSiteInfoService;
+import com.sang.blog.biz.service.*;
 import com.sang.blog.commom.result.Result;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +23,9 @@ public class WebSiteInfoPortalController {
 
     @Autowired
     private WebSiteInfoService webSiteInfoService;
+
+    @Autowired
+    private UserService userService;
 
     /**
      * 门户获得分类列表
@@ -97,11 +98,11 @@ public class WebSiteInfoPortalController {
      * 统计信息，通过redis来统计，数据也会保存再mysql里
      * 不会每次更新到mysql里，当用户去获取访问量的时候，会更新一次
      *
-     * redis时机：每个页面访问的时候，如果不在mysql中读取数据，写道redis中
+     * redis时机：每个页面访问的时候，如果不在mysql中读取数据，写道redi s中
      * 如果就自增
      *
      * mysql的时机，用户读取网站总访问量的时候，我们就读取redis的
-     * 如果redsi额米有，就读取mysql写道redis里
+     * 如果redis额米有，就读取mysql写道redis里
      *
      */
     @PutMapping("/view_count")
@@ -109,6 +110,19 @@ public class WebSiteInfoPortalController {
         webSiteInfoService.updateViewCount();
 
         return;
+    }
+
+    @GetMapping("/list")
+    public Result listCategory() {
+
+        return categoriesService.listCategory();
+
+    }
+
+    @ApiOperation(value = "获取用户信息" )
+    @GetMapping("/user_info/{userId}")
+    public Result getUserInfo(@PathVariable("userId") String userId) {
+        return userService.getUserInfo(userId);
     }
 
 

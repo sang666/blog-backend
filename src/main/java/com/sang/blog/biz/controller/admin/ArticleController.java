@@ -182,6 +182,10 @@ public class ArticleController {
                 articleSearch.setTitle(article.getTitle());
                 articleSearch.setLabels(article.getLabels());
                 articleSearch.setCategoryId(article.getCategoryId());
+
+                articleSearch.setCover(article.getCover());
+
+                articleSearch.setLabelList(article.getLabelList());
                 //log.info(article.getLabelList().listIterator().next());
                 articleSearchDao.save(articleSearch);
             }

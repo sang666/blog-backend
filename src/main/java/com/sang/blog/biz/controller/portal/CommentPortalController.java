@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @RestController
-@RequestMapping("/protal/comment")
+@RequestMapping("/portal/comment")
 public class CommentPortalController {
     @Autowired
     private CommentService commentService;

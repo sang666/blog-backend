@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/protal/image")
+@RequestMapping("/portal/image")
 public class ImagePortalController {
 
     @Autowired
