@@ -812,6 +812,47 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return Result.ok().message("重置成功");
     }
 
+    /**
+     * 找回密码时验证邮箱
+     * @param email
+     * @param email_code
+     * @param captcha_code
+     * @param captcha_key
+     * @return
+     */
+    @Override
+    public Result resetPasswordByEmail(String email, String email_code, String captcha_code, String captcha_key) {
+
+        String captchaCode = (String) redisUtils.get(Constants.user.KEY_COPTCHA_CONTENT + captcha_key);
+        if (StringUtils.isEmpty(captchaCode)) {
+            return Result.err().message("人类验证码已过期");
+        }
+        if (!captchaCode.equals(captcha_code)) {
+            return Result.err().message("人类验证码不正确");
+
+        } else {
+            redisUtils.del(Constants.user.KEY_COPTCHA_CONTENT + captcha_key);
+        }
+        //第三步，检查邮箱是否被注册
+        QueryWrapper<User> userQueryWrapper1 = new QueryWrapper<>();
+        userQueryWrapper1.eq("email", email);
+        User userByEmail = userMapper.selectOne(userQueryWrapper1);
+        if (userByEmail == null) {
+            return Result.err().message("该邮箱未注册");
+        }
+        //检查是否有邮箱填写
+        if (StringUtils.isEmpty(email)) {
+            return Result.err().message("邮箱验证码不能为空");
+        }
+        //根据邮箱去redis那验证码对比
+        String redisVerifyCode = (String) redisUtils.get(Constants.user.KEY_EMAIL_CODE_CONTENT+email);
+        if (redisVerifyCode == null || !redisVerifyCode.equals(email_code)) {
+            return Result.err().message("验证码错误");
+        }
+        //如果一样
+        return Result.ok().message("账号验证正确");
+    }
+
 
     /**
      * 抽取的方法
@@ -939,16 +980,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return null;
     }
 
-    public long xx(){
-
-        long l = snowflakeIdWorker.nextId();
-        return l;
-    }
-
-    public static void main(String[] args) {
-        UserServiceImpl userService =  new UserServiceImpl();
-        userService.xx();
-    }
 
 
 }

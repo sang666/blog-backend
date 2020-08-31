@@ -340,4 +340,14 @@ public class UserController {
         return userService.resetPassword(userId,password);
     }
 
+
+    @GetMapping("/check_email_code")
+    public Result checkEmail(@RequestParam("email")String email,
+                             @RequestParam("email_code")String email_code,
+                             @RequestParam("captcha_code")String captcha_code,
+                             @RequestParam("captcha_key")String captcha_key){
+        return userService.resetPasswordByEmail(email,email_code,captcha_code,captcha_key);
+
+    }
+
 }

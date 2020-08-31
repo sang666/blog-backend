@@ -54,4 +54,6 @@ public interface UserService extends IService<User> {
     Result parseToken(HttpServletRequest request, HttpServletResponse response);
 
     Result resetPassword(String userId, String password);
+
+    Result resetPasswordByEmail(String email, String email_code, String captcha_code, String captcha_key);
 }

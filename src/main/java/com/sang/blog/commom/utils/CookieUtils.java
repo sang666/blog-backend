@@ -11,7 +11,8 @@ import javax.servlet.http.HttpServletResponse;
 public class CookieUtils {
 
     public static final int default_age = 60 * 60 * 24 * 365;
-    public static final String domain = "sang66.icu";
+    // prod:   public static final String domain = "sang66.icu";
+    public static final String domain = "localhost";
 
     /**
      * 设置cookie值
